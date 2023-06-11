@@ -1,4 +1,4 @@
-# my_repo
+# ISU
 
 - description: Storage for homeworks
 - author: Ilya Putilov
