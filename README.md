@@ -1,2 +1,4 @@
 # my_repo
- test
+
+- description: Storage for homeworks
+- author: Ilya Putilov
