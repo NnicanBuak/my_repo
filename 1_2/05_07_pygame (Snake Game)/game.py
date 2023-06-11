@@ -6,6 +6,7 @@ from tkinter import messagebox
 
 pygame.init()
 
+
 class Menu:
     def __init__(self, screen_width, screen_height):
         self.screen_width = screen_width
@@ -19,25 +20,9 @@ class Menu:
         title_text_rect = title_text.get_rect(center=(self.screen_width // 2, 100))
         win.blit(title_text, title_text_rect)
 
-        controls_text = self.font.render("Controls:", True, (255, 255, 255))
+        controls_text = self.font.render("Controls by Arrows", True, (255, 255, 255))
         controls_text_rect = controls_text.get_rect(center=(self.screen_width // 2, 200))
         win.blit(controls_text, controls_text_rect)
-
-        up_text = self.font.render("Move Up: Arrow Up", True, (255, 255, 255))
-        up_text_rect = up_text.get_rect(center=(self.screen_width // 2, 250))
-        win.blit(up_text, up_text_rect)
-
-        down_text = self.font.render("Move Down: Arrow Down", True, (255, 255, 255))
-        down_text_rect = down_text.get_rect(center=(self.screen_width // 2, 300))
-        win.blit(down_text, down_text_rect)
-
-        left_text = self.font.render("Move Left: Arrow Left", True, (255, 255, 255))
-        left_text_rect = left_text.get_rect(center=(self.screen_width // 2, 350))
-        win.blit(left_text, left_text_rect)
-
-        right_text = self.font.render("Move Right: Arrow Right", True, (255, 255, 255))
-        right_text_rect = right_text.get_rect(center=(self.screen_width // 2, 400))
-        win.blit(right_text, right_text_rect)
 
         start_text = self.font.render("Press Space to Start", True, (255, 255, 255))
         start_text_rect = start_text.get_rect(center=(self.screen_width // 2, self.screen_height - 100))
@@ -64,7 +49,9 @@ class Game:
         pygame.display.set_caption("Snake")
         self.clock = pygame.time.Clock()
         self.score = 0
-        self.snake_speed = 10
+        self.snake_speed = 1
+        self.game_over = False
+        self.game_running = False
 
     def play_background_music(self):
         pygame.mixer.music.load("./assets/background_music.wav")
@@ -85,151 +72,193 @@ class Game:
     def show_game_over_message(self):
         root = tk.Tk()
         root.withdraw()
-        messagebox.showinfo("Game Over", "Game Over!")
+        messagebox.showinfo("Game Over", f"Your score: {self.score}")
 
-    def loop(self, snake, food):
-        run = True
-        while run:
-            pygame.time.delay(self.snake_speed)
+    def generate_food(self, snake):
+        while True:
+            food_position = (
+                random.randint(0, self.screen_width // self.cell_size - 1) * self.cell_size,
+                random.randint(0, self.screen_height // self.cell_size - 1) * self.cell_size,
+            )
+
+            if food_position not in snake.body:
+                return food_position
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.game_running = False
+                elif event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT):
+                    self.snake.handle_input(event.key)
+
+    def update_snake(self):
+        new_head = self.snake.head_position
+
+        if self.snake.next_direction:
+            self.snake.direction = self.snake.next_direction
+            self.snake.next_direction = None
+
+        if self.snake.direction == pygame.K_UP:
+            new_head = (self.snake.head_position[0], self.snake.head_position[1] - self.cell_size)
+        elif self.snake.direction == pygame.K_DOWN:
+            new_head = (self.snake.head_position[0], self.snake.head_position[1] + self.cell_size)
+        elif self.snake.direction == pygame.K_LEFT:
+            new_head = (self.snake.head_position[0] - self.cell_size, self.snake.head_position[1])
+        elif self.snake.direction == pygame.K_RIGHT:
+            new_head = (self.snake.head_position[0] + self.cell_size, self.snake.head_position[1])
+
+        self.snake.body.insert(0, new_head)
+        self.snake.head_position = new_head
+        self.snake.body.pop()
+
+    def check_snake_collision(self):
+        if (
+            self.snake.head_position[0] < 0
+            or self.snake.head_position[0] >= self.screen_width
+            or self.snake.head_position[1] < 0
+            or self.snake.head_position[1] >= self.screen_height
+        ):
+            return True
+
+        for cell in self.snake.body[1:]:
+            if self.snake.head_position == cell:
+                return True
+
+        return False
+
+    def loop(self):
+        self.snake = Snake(self.screen_width, self.screen_height, self.cell_size)
+        food = Food(*self.generate_food(self.snake), self.cell_size)
+
+        while self.game_running:
             self.clock.tick(10)
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    run = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        run = False
+            self.handle_events()
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP] and snake.direction != "down":
-                snake.move("up")
-            elif keys[pygame.K_DOWN] and snake.direction != "up":
-                snake.move("down")
-            elif keys[pygame.K_LEFT] and snake.direction != "right":
-                snake.move("left")
-            elif keys[pygame.K_RIGHT] and snake.direction != "left":
-                snake.move("right")
+            if not self.game_over:
+                self.update_snake()
 
-            snake.update()
+                if self.check_snake_collision():
+                    self.play_collision_sound()
+                    self.show_game_over_message()
+                    self.game_over = True
+                    break
 
-            if snake.collide(self.screen_width, self.screen_height):
-                self.play_collision_sound()
-                self.show_game_over_message()
-                break
-
-            if snake.eat(food):
-                self.play_eat_sound()
-                self.score += 1
-                food.randomize_position(snake.body)
+                if self.snake.eat(food):
+                    self.play_eat_sound()
+                    self.score += 1
+                    food.position = self.generate_food(self.snake)
 
             self.win.fill((0, 0, 0))
-            snake.draw(self.win)
+            self.snake.draw(self.win)
             food.draw(self.win)
             pygame.display.update()
 
+            if self.game_over:
+                self.game_over = False
+                self.score = 0
+
         self.stop_background_music()
-        pygame.quit()
-        return self.score
 
+    def start(self):
+        self.play_background_music()
+        self.game_running = True
+        menu = Menu(self.screen_width, self.screen_height)
 
-class Cell:
-    def __init__(self, x, y, color):
-        self.x = x
-        self.y = y
-        self.color = color
+        while True:
+            menu.draw(self.win)
+            menu.handle_events()
 
-    def draw(self, win):
-        pygame.draw.rect(win, self.color, (self.x, self.y, 20, 20))
+            if menu.space_pressed:
+                self.loop()
 
 
 class Snake:
-    def __init__(self, x, y):
-        self.color = (0, 255, 0)
-        self.body = []
-        self.head = Cell(x, y, (0, 100, 0))
-        self.body.append(self.head)
-        self.direction = "right"
+    def __init__(self, screen_width, screen_height, cell_size):
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.cell_size = cell_size
+        self.head_color = (0, 255, 0)
+        self.body_color = (0, 200, 0)
+        self.head_position = (screen_width // 2, screen_height // 2)
+        self.body = [self.head_position]
+        self.direction = None
+        self.next_direction = None
 
-    def move(self, direction):
-        self.direction = direction
+    def handle_input(self, key):
+        if self.direction is None:
+            self.direction = key
+        elif key == pygame.K_UP and self.direction != pygame.K_DOWN:
+            self.next_direction = key
+        elif key == pygame.K_DOWN and self.direction != pygame.K_UP:
+            self.next_direction = key
+        elif key == pygame.K_LEFT and self.direction != pygame.K_RIGHT:
+            self.next_direction = key
+        elif key == pygame.K_RIGHT and self.direction != pygame.K_LEFT:
+            self.next_direction = key
 
     def update(self):
-        for i in range(len(self.body) - 1, 0, -1):
-            self.body[i].x = self.body[i - 1].x
-            self.body[i].y = self.body[i - 1].y
+        new_head = self.head_position
 
-        if self.direction == "right":
-            self.head.x += 20
-        if self.direction == "left":
-            self.head.x -= 20
-        if self.direction == "up":
-            self.head.y -= 20
-        if self.direction == "down":
-            self.head.y += 20
+        if self.next_direction:
+            self.direction = self.next_direction
+            self.next_direction = None
 
-    def draw(self, win):
-        for cell in self.body:
-            cell.draw(win)
+        if self.direction == pygame.K_UP:
+            new_head = (self.head_position[0], self.head_position[1] - self.cell_size)
+        elif self.direction == pygame.K_DOWN:
+            new_head = (self.head_position[0], self.head_position[1] + self.cell_size)
+        elif self.direction == pygame.K_LEFT:
+            new_head = (self.head_position[0] - self.cell_size, self.head_position[1])
+        elif self.direction == pygame.K_RIGHT:
+            new_head = (self.head_position[0] + self.cell_size, self.head_position[1])
 
-    def collide(self, screen_width, screen_height):
-        if self.head.x < 0 or self.head.x >= screen_width or self.head.y < 0 or self.head.y >= screen_height:
+        self.body.insert(0, new_head)
+        self.head_position = new_head
+        self.body.pop()
+
+    def check_collision(self):
+        if (
+            self.head_position[0] < 0
+            or self.head_position[0] >= self.screen_width
+            or self.head_position[1] < 0
+            or self.head_position[1] >= self.screen_height
+        ):
             return True
 
-        for i in range(1, len(self.body)):
-            if self.head.x == self.body[i].x and self.head.y == self.body[i].y:
+        for cell in self.body[1:]:
+            if self.head_position == cell:
                 return True
 
         return False
 
     def eat(self, food):
-        if self.head.x == food.x and self.head.y == food.y:
-            self.body.append(Cell(food.x, food.y, self.color))
-            return True
-        else:
-            return False
+        return self.head_position == food.position
+
+    def draw(self, win):
+        pygame.draw.rect(win, self.head_color, (self.head_position[0], self.head_position[1], self.cell_size, self.cell_size))
+        for segment in self.body[1:]:
+            pygame.draw.rect(win, self.body_color, (segment[0], segment[1], self.cell_size, self.cell_size))
 
 
 class Food:
-    def __init__(self, x, y, game):
-        self.x = x
-        self.y = y
+    def __init__(self, x, y, size):
+        self.position = (x, y)
+        self.size = size
         self.color = (255, 0, 0)
-        self.game = game
 
     def draw(self, win):
-        pygame.draw.rect(win, self.color, (self.x, self.y, 20, 20))
+        pygame.draw.rect(win, self.color, (self.position[0], self.position[1], self.size, self.size))
 
-    def randomize_position(self, snake_body):
-        while True:
-            self.x = random.randrange(0, self.game.screen_width - 20, 20)
-            self.y = random.randrange(0, self.game.screen_height - 20, 20)
-
-            for cell in snake_body:
-                if cell.x == self.x and cell.y == self.y:
-                    break
-            else:
-                break
-
-
-def main():
-    screen_width = 800
-    screen_height = 800
-
-    pygame.init()
-    game = Game(screen_width, screen_height, 8)
-    menu = Menu(screen_width, screen_height)
-
-    while True:
-        menu.draw(game.win)
-        menu.handle_events()
-
-        if menu.space_pressed:
-            menu.space_pressed = False
-            game.play_background_music()
-            snake = Snake(screen_width // 2, screen_height // 2)
-            food = Food(400, 300, game)
-            score = game.loop(snake, food)
-            print(f"Your score: {score}")
 
 if __name__ == "__main__":
-    main()
+    screen_width = 800
+    screen_height = 800
+    cell_size = 8
+
+    game = Game(screen_width, screen_height, cell_size)
+    game.start()
