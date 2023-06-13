@@ -45,8 +45,9 @@ class Menu:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.space_pressed = True
-            elif event.type == pygame.MOUSEBUTTONDOWN and self.space_pressed:
-                self.space_pressed = False
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    self.space_pressed = False
 
 
 class Game:
@@ -104,6 +105,13 @@ class Game:
             if food_position not in snake.body:
                 return food_position
 
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.is_game_running = False
+                pygame.quit()
+                sys.exit()
+
     def loop(self):
         snake = Snake(self.screen_width, self.screen_height, self.cell_size)
         self.food = Food(*self.generate_food(snake), self.cell_size)
@@ -119,10 +127,10 @@ class Game:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
                     if event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT):
-                        snake.handle_input(event.key)
+                        snake.handle_input(snake, event.key)
 
             if not self.is_game_over:
-                snake.update(self.screen_width, self.screen_height)
+                snake.update()
 
                 if snake.check_collision(self.screen_width, self.screen_height):
                     self.play_collision_sound()
@@ -216,19 +224,13 @@ class Snake:
         self.speed = 2
         self.max_speed = 5
 
-    def handle_input(self, key):
+    def handle_input(self, snake, key):
         if self.direction is None:
             self.direction = key
-        elif key == pygame.K_UP and self.direction != pygame.K_DOWN:
-            self.next_direction = key
-        elif key == pygame.K_DOWN and self.direction != pygame.K_UP:
-            self.next_direction = key
-        elif key == pygame.K_LEFT and self.direction != pygame.K_RIGHT:
-            self.next_direction = key
-        elif key == pygame.K_RIGHT and self.direction != pygame.K_LEFT:
+        elif snake.body == [] or (key == pygame.K_UP and self.direction != pygame.K_DOWN) or (key == pygame.K_DOWN and self.direction != pygame.K_UP) or (key == pygame.K_LEFT and self.direction != pygame.K_RIGHT) or (key == pygame.K_RIGHT and self.direction != pygame.K_LEFT):
             self.next_direction = key
 
-    def update(self, screen_width, screen_height):
+    def update(self):
         new_head = self.head_position
 
         if self.next_direction:
