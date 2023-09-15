@@ -1,4 +1,14 @@
 import inspect
+import os
+import platform
+
+def clear_console():
+    system = platform.system()
+    if system == 'Windows':
+        os.system('cls')
+    else:
+        os.system('clear')
+
 
 class Task():
     last_used_id = 1
@@ -11,6 +21,7 @@ class Task():
         self.requires_input = requires_input
         self.name = name
         self.description = description
+# class SubTask():
 class TaskManager:
     def __init__(self):
         """
@@ -30,7 +41,7 @@ class TaskManager:
         task = Task(task_function, requires_input, task_name, task_description )
         self.tasks.append(task)
 
-    def run_task(self, task_id):
+    def run_task(self, task_id:int):
         """
         Запуск задачи по её идентификатору.
 
@@ -45,6 +56,10 @@ class TaskManager:
         if task is None:
             print(f"Задача с id {task_id} не найдена.")
             return
+
+        clear_console()
+        print(f"Задача: {task.name}")
+        print(f"Описание: {task.description}", '\n')
 
         argspec = inspect.getfullargspec(task.function)
         input_args = {}
@@ -67,14 +82,10 @@ class TaskManager:
                     print(f"Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else 'не указан тип'}. Попробуйте еще раз.")
 
         try:
-            output = task.function(**input_args)
+            return task.function(**input_args)
         except Exception as e:
             print(f"Ошибка выполнения задачи {task}: {e}")
             return
-
-        print(f"Задача: {task.name}")
-        print(f"Описание: {task.description}")
-        print(f"Результат: {output}")
 
 # Создаём функции решающие задачи
 def task1(a:int, b:int, c:int):
@@ -87,20 +98,26 @@ manager.add_task(task1, True, 'Обмен значениями переменн�
 
 # Исполнение программы
 if __name__ == '__main__':
+    message = ""
     while True:
         try:
-            print("\nДоступные задачи:")
+            clear_console()
+            print(message, '\n')
+
+            print("Доступные задачи:")
+            print('—————————————————')
             for task in manager.tasks:
                 print(f"{task.id}: {task.name}")
-            print('---')
-            task_id_input = int(input("Введите id задачи (или 0 для завершения): "))
-            if task_id_input == 0 or task_id_input.startswith('&'):
+            print('—————————————————')
+            task_id_input = int(input("Введите id задачи: "))
+            if task_id_input == 0:
                 break
-            manager.run_task(task_id_input)
+            result = manager.run_task(task_id_input)
+            input(f"result")
         except ValueError:
-            print("Ошибка: Введён некорректный id задачи (требуется целое число).")
+            message = "[Ошибка: Введён некорректный id задачи (требуется целое число)]"
         except KeyboardInterrupt:
-            print("\nПрограмма завершена по запросу пользователя.")
+            print("[Программа завершена по запросу пользователя]")
             break
 else:
-    print('Это консольное приложение, запустите основной файл Python')
+    print('[Предупреждение: Это консольное приложение, запустите основной файл Python]')
