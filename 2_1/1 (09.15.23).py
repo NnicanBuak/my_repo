@@ -1,10 +1,12 @@
 class Task():
     last_used_id = 1
 
-    def __init__(self, name):
-        self.id = Task.last_used_id
-        Task.last_used_id += 1
-        self.name = name
+    def __init__(self, name, function):
+      self.id = Task.last_used_id
+      Task.last_used_id += 1
+      self.name = name
+      self.function = function
+
 
 class TaskManager:
     def __init__(self):
