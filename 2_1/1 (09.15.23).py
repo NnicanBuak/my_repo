@@ -69,7 +69,7 @@ class TaskManager:
         try:
             output = task.function(**input_args)
         except Exception as e:
-            print(f"Ошибка выполнения задачи: {e}")
+            print(f"Ошибка выполнения задачи {task}: {e}")
             return
 
         print(f"Задача: {task.name}")
@@ -93,12 +93,12 @@ if __name__ == '__main__':
             for task in manager.tasks:
                 print(f"{task.id}: {task.name}")
             print('---')
-            task_id = int(input("Введите id задачи (или 0 для завершения): "))
-            if task_id == 0:
+            task_id_input = int(input("Введите id задачи (или 0 для завершения): "))
+            if task_id_input == 0 or task_id_input.startswith('&'):
                 break
-            manager.run_task(task_id)
+            manager.run_task(task_id_input)
         except ValueError:
-            print("Ошибка: Введите корректный id задачи (целое число).")
+            print("Ошибка: Введён некорректный id задачи (требуется целое число).")
         except KeyboardInterrupt:
             print("\nПрограмма завершена по запросу пользователя.")
             break
