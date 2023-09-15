@@ -51,12 +51,13 @@ class TaskManager:
         input_args = {}
         for arg in argspec.args:
             arg_type = None
+
             # Проверяем, есть ли аннотация аргумента
             if arg in argspec.annotations:
-                arg_type = argspec.annotations[arg].__name__
+                arg_type = argspec.annotations[arg]
 
             # Запрашиваем значение аргумента
-            user_input = input(f"Введите значение для аргумента '{arg}' ({arg_type}): ")
+            user_input = input(f"Введите значение для аргумента '{arg}' ({arg_type.__name__ if arg_type else 'не указан тип'}): ")
 
             # Преобразуем введенное значение в соответствующий тип
             try:
@@ -65,7 +66,7 @@ class TaskManager:
                 else:
                     input_args[arg] = user_input
             except ValueError:
-                print(f"Ошибка: Не удалось преобразовать введенное значение в тип {arg_type}.")
+                print(f"Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else 'не указан тип'}.")
                 return
 
         try:
