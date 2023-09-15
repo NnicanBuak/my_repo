@@ -30,7 +30,7 @@ class TaskManager:
         :param task_name: Название задачи.
         :param task_function: Функция, выполняющая задачу.
         """
-        task = Task(task_name)
+        task = Task(task_name, task_function)
         self.tasks.append(task)
 
     def run_task(self, task_id):
