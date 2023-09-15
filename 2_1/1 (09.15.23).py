@@ -1,6 +1,9 @@
-# Cоставить программу обмена значениями трех переменных а, b, c: так, чтобы b присвоилось значение c,
-# с присвоить значение а, a присвоить значение b.
-# Затратить на это минимум строк. Кто первый сдал кратчайшую программу, получит +1 балл.
+# class ExerciseManager:
 
-a, b, c = 1, 2, 3
-a, b, c = b, c, a
+class Exercise():
+  last_used_id = 1
+  def __init__(self, name):
+    self.id = Exercise.last_used_id
+    Exercise.last_used_id += 1
+
+exercise1 = Exercise()
