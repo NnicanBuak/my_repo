@@ -46,28 +46,25 @@ class TaskManager:
             print(f"Задача с id {task_id} не найдена.")
             return
 
-        # Получаем информацию о сигнатуре функции
         argspec = inspect.getfullargspec(task.function)
         input_args = {}
         for arg in argspec.args:
             arg_type = None
 
-            # Проверяем, есть ли аннотация аргумента
             if arg in argspec.annotations:
                 arg_type = argspec.annotations[arg]
 
-            # Запрашиваем значение аргумента
-            user_input = input(f"Введите значение для аргумента '{arg}' ({arg_type.__name__ if arg_type else 'не указан тип'}): ")
+            while True:
+                user_input = input(f"Введите значение для аргумента '{arg}' ({arg_type.__name__ if arg_type else 'не указан тип'}): ")
 
-            # Преобразуем введенное значение в соответствующий тип
-            try:
-                if arg_type:
-                    input_args[arg] = arg_type(user_input)
-                else:
-                    input_args[arg] = user_input
-            except ValueError:
-                print(f"Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else 'не указан тип'}.")
-                return
+                try:
+                    if arg_type:
+                        input_args[arg] = arg_type(user_input)
+                    else:
+                        input_args[arg] = user_input
+                    break
+                except ValueError:
+                    print(f"Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else 'не указан тип'}. Попробуйте еще раз.")
 
         try:
             output = task.function(**input_args)
@@ -88,6 +85,7 @@ def task1(a:int, b:int, c:int):
 manager = TaskManager()
 manager.add_task(task1, True, 'Обмен значениями переменных','Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
 
+# Исполнение программы
 if __name__ == '__main__':
     while True:
         try:
