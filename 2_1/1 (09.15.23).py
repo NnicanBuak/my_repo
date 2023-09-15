@@ -100,9 +100,12 @@ if __name__ == '__main__':
             task_id = int(input('Введите номер задачи: '))
 
             if task_id < 1:
-                break
+                message = '\n [Ошибка: Введён некорректный id задачи]'
+                pass
 
             task = next((t for t in manager.tasks if t.id == task_id), None)
+
+            if task =
 
             result = manager.run_task(task)
             input(f"Результат: {result}")
