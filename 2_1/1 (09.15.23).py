@@ -38,35 +38,45 @@ class TaskManager:
         task = Task(task_function, task_name, task_description)
         self.tasks.append(task)
 
-    def run_task(self, task_id: int):
+    def run_task(self, task: object):
         '''
-        Запуск задачи по её идентификатору.
+        Запуск задачи.
 
-        :param task_id: Уникальный идентификатор задачи.
+        :param task: Задача.
         '''
-        task = None
-        for t in self.tasks:
-            if t.id == task_id:
-                task = t
-                break
-
-        if task is None:
-            print(f"[Задача с id - {task_id} не найдена]")
-            return
-
         clear_console()
         print(f"Задача: {task.name}")
         print(f"Описание: {task.description}", '\n')
 
+        argspec = inspect.getfullargspec(task.function)
+        if argspec.args:
+            input_args = {}
+            for arg in argspec.args:
+                arg_type = None
+
+                if arg in argspec.annotations:
+                    arg_type = argspec.annotations[arg]
+
+                while True:
+                    user_input = input(f"Введите значение для аргумента '{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}): ")
+
+                    try:
+                        if arg_type:
+                            input_args[arg] = arg_type(user_input)
+                        else:
+                            input_args[arg] = user_input
+                        break
+                    except ValueError:
+                        print("\n", f"[Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else 'не указан тип'}. Попробуйте еще раз]")
+
         try:
-            return task.function()
+            return task.function(**input_args)
         except Exception as e:
-            print('\n', f"[Ошибка выполнения задачи {task}: {e}]")
+            print("\n", f"[Ошибка выполнения задачи {task.name}: {e}]")
             return
 
 # Создаём функции, решающие задачи
-def task1():
-    a, b, c = 1, 2, 3  # Замените значения на то, что вам нужно
+def task1(a: int, b: int, c: int):
     a, b, c = b, c, a
     return f"a = {a}, b = {b}, c = {c}"
 
@@ -81,17 +91,22 @@ if __name__ == '__main__':
         try:
             clear_console()
             print(message, '\n')
-
             print('Доступные задачи:')
             print('—————————————————')
             for task in manager.tasks:
                 print(f"{task.id}: {task.name}")
             print('—————————————————')
-            task_id_input = int(input('Введите id задачи: '))
-            if task_id_input == 0:
+
+            task_id = int(input('Введите номер задачи: '))
+
+            if task_id < 1:
                 break
-            result = manager.run_task(task_id_input)
+
+            task = next((t for t in manager.tasks if t.id == task_id), None)
+
+            result = manager.run_task(task)
             input(f"Результат: {result}")
+
         except ValueError:
             message = '\n [Ошибка: Введён некорректный id задачи (требуется целое число)]'
         except KeyboardInterrupt:
