@@ -1,13 +1,16 @@
+import inspect
+
 class Task():
     last_used_id = 1
 
-    def __init__(self, name, function):
-      self.id = Task.last_used_id
-      Task.last_used_id += 1
-      self.name = name
-      self.function = function
+    def __init__(self, function, requires_input, name, description):
+        self.id = Task.last_used_id
+        Task.last_used_id += 1
 
-
+        self.function = function
+        self.requires_input = requires_input
+        self.name = name
+        self.description = description
 class TaskManager:
     def __init__(self):
         """
@@ -15,22 +18,16 @@ class TaskManager:
         """
         self.tasks = []
 
-    def list_tasks(self):
-        """
-        Вывод списка доступных задач в консоль.
-        """
-        print("Доступные задачи:")
-        for task in self.tasks:
-            print(f"{task.id}: {task.name}")
-
-    def add_task(self, task_name, task_function):
+    def add_task(self, task_function, requires_input, task_name, task_description):
         """
         Добавление задачи в менеджер.
 
-        :param task_name: Название задачи.
         :param task_function: Функция, выполняющая задачу.
+        :param requires_input: Указывает, требуются ли аргументы для выполнения задачи.
+        :param task_name: Название задачи.
+        :param task_description: Описание задачи.
         """
-        task = Task(task_name, task_function)
+        task = Task(task_function, requires_input, task_name, task_description )
         self.tasks.append(task)
 
     def run_task(self, task_id):
@@ -49,23 +46,54 @@ class TaskManager:
             print(f"Задача с id {task_id} не найдена.")
             return
 
-        result = task.function()
+        # Получаем информацию о сигнатуре функции
+        argspec = inspect.getfullargspec(task.function)
+        input_args = {}
+        for arg in argspec.args:
+            arg_type = None
+            # Проверяем, есть ли аннотация аргумента
+            if arg in argspec.annotations:
+                arg_type = argspec.annotations[arg].__name__
+
+            # Запрашиваем значение аргумента
+            user_input = input(f"Введите значение для аргумента '{arg}' ({arg_type}): ")
+
+            # Преобразуем введенное значение в соответствующий тип
+            try:
+                if arg_type:
+                    input_args[arg] = arg_type(user_input)
+                else:
+                    input_args[arg] = user_input
+            except ValueError:
+                print(f"Ошибка: Не удалось преобразовать введенное значение в тип {arg_type}.")
+                return
+
+        try:
+            output = task.function(**input_args)
+        except Exception as e:
+            print(f"Ошибка выполнения задачи: {e}")
+            return
+
         print(f"Задача: {task.name}")
-        print(f"Результат: {result}")
+        print(f"Описание: {task.description}")
+        print(f"Результат: {output}")
 
 # Создаём функции решающие задачи
-def task1(a, b, c):
+def task1(a:int, b:int, c:int):
     a, b, c = b, c, a
-    return (a, b, c)
+    return  f'a = {a}, b = {b}, c = {c}'
 
 # Создаем менеджер и добавляем задачи
 manager = TaskManager()
-manager.add_task("Перестановка", task1)
+manager.add_task(task1, True, 'Обмен значениями переменных','Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
 
 if __name__ == '__main__':
     while True:
         try:
-            manager.list_tasks()  # Выводим список задач
+            print("\nДоступные задачи:")
+            for task in manager.tasks:
+                print(f"{task.id}: {task.name}")
+            print('---')
             task_id = int(input("Введите id задачи (или 0 для завершения): "))
             if task_id == 0:
                 break
@@ -75,3 +103,5 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print("\nПрограмма завершена по запросу пользователя.")
             break
+else:
+    print('Это консольное приложение, запустите основной файл Python')
