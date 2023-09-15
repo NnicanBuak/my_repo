@@ -9,7 +9,6 @@ def clear_console():
     else:
         os.system('clear')
 
-
 class Task():
     last_used_id = 1
 
@@ -21,7 +20,7 @@ class Task():
         self.requires_input = requires_input
         self.name = name
         self.description = description
-# class SubTask():
+
 class TaskManager:
     def __init__(self):
         """
@@ -38,10 +37,10 @@ class TaskManager:
         :param task_name: Название задачи.
         :param task_description: Описание задачи.
         """
-        task = Task(task_function, requires_input, task_name, task_description )
+        task = Task(task_function, requires_input, task_name, task_description)
         self.tasks.append(task)
 
-    def run_task(self, task_id:int):
+    def run_task(self, task_id: int):
         """
         Запуск задачи по её идентификатору.
 
@@ -88,13 +87,13 @@ class TaskManager:
             return
 
 # Создаём функции решающие задачи
-def task1(a:int, b:int, c:int):
+def task1(a: int, b: int, c: int):
     a, b, c = b, c, a
-    return  f'a = {a}, b = {b}, c = {c}'
+    return f'a = {a}, b = {b}, c = {c}'
 
 # Создаем менеджер и добавляем задачи
 manager = TaskManager()
-manager.add_task(task1, True, 'Обмен значениями переменных','Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
+manager.add_task(task1, True, 'Обмен значениями переменных', 'Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
 
 # Исполнение программы
 if __name__ == '__main__':
@@ -113,7 +112,7 @@ if __name__ == '__main__':
             if task_id_input == 0:
                 break
             result = manager.run_task(task_id_input)
-            input(f"result")
+            input(f"{result}")
         except ValueError:
             message = "[Ошибка: Введён некорректный id задачи (требуется целое число)]"
         except KeyboardInterrupt:
