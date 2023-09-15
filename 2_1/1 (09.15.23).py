@@ -49,9 +49,9 @@ class TaskManager:
             print(f"Задача с id {task_id} не найдена.")
             return
 
-        # result = task.function()
+        result = task.function()
         print(f"Задача: {task.name}")
-        # print(f"Результат: {result}")
+        print(f"Результат: {result}")
 
 # Создаём функции решающие задачи
 def task1(a, b, c):
