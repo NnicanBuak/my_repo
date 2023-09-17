@@ -140,7 +140,7 @@ class TaskManager:
                 print('\nclosed')
                 break
 
-    def input_subtask(self, parent_task: Union[Task, SubTask]):
+    def input_subtask(self, parent_task: Task):
         while True:
             try:
                 self.ui.clear_console()
