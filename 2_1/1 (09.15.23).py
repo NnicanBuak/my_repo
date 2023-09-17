@@ -90,16 +90,19 @@ class TaskManager:
                     arg_type = argspec.annotations[arg]
 
                 while True:
-                    user_input = input(f"'{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}): ")
                     try:
-                        if arg_type:
-                            input_args[arg] = arg_type(user_input)
-                        else:
-                            input_args[arg] = user_input
-                        break
-                    except ValueError:
-                        print(f"|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else 'тип не указан'}. Попробуйте еще раз|")
-
+                        user_input = input(f"'{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}): ")
+                        try:
+                            if arg_type:
+                                input_args[arg] = arg_type(user_input)
+                            else:
+                                input_args[arg] = user_input
+                            break
+                        except ValueError:
+                            print(f"|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else 'тип не указан'}. Попробуйте еще раз|")
+                    except KeyboardInterrupt:
+                        print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
+                        exit()
         try:
             return task.function(**input_args)
         except Exception as e:
@@ -112,7 +115,11 @@ class TaskManager:
                 self.ui.clear_console()
                 self.ui.display_message()
                 self.ui.display_tasks(self.tasks)
-                task_id = int(input('Введите номер задачи: ')) - 1
+                try:
+                    task_id = int(input('Введите номер задачи: ')) - 1
+                except KeyboardInterrupt:
+                    print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
+                    exit()
                 if task_id < 0 or task_id >= len(self.tasks):
                     self.ui.set_message('Ошибка: Введён некорректный номер задачи')
                     continue
@@ -135,7 +142,11 @@ class TaskManager:
                 self.ui.clear_console()
                 self.ui.display_message()
                 self.ui.display_subtasks(parent_task.subtasks)
-                subtask_id = int(input('Введите номер подзадачи: ')) - 1
+                try:
+                    subtask_id = int(input('Введите номер подзадачи: ')) - 1
+                except KeyboardInterrupt:
+                    print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
+                    exit()
                 if subtask_id < 0 or subtask_id >= len(parent_task.subtasks):
                     self.ui.set_message('Ошибка: Введён некорректный номер подзадачи')
                     continue
@@ -171,8 +182,8 @@ def main():
             else:
                 input(f"[Enter для закрытия задачи]")
         except KeyboardInterrupt:
-            print('\nclosed')
-            break
+            print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
+            exit()
 
 # Функции решающие задачи
 def task1(a: int, b: int, c: int):
