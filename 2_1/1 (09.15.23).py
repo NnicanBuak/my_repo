@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 import inspect
 import os
 import platform
@@ -23,7 +23,7 @@ class ConsoleUI:
     def __init__(self):
         self.message = 'Ctrl+C/Del для завершения программы'
 
-    def set_message(self, message):
+    def set_message(self, message: str):
         self.message = message
 
     def display_message(self):
@@ -36,20 +36,71 @@ class ConsoleUI:
         else:
             os.system('clear')
 
-    def display_tasks(self, tasks):
-        print('Доступные задачи:')
-        print('—————————————————')
-        for i, task in enumerate(tasks, start=1):
-            print(f"{i}: {task.name}")
-        print('—————————————————')
+    def input_task(self, tasks: list[Task]) -> Optional[Task]:
+        result = None
+        while True:
+            try:
+                self.clear_console()
+                self.display_message()
+                print('Доступные задачи:')
+                print('—————————————————')
+                for i, task in enumerate(tasks, start=1):
+                    print(f"{i}: {task.name}")
+                print('—————————————————')
+                try:
+                    task_id = int(input('Введите номер задачи: ')) - 1
+                except KeyboardInterrupt:
+                    print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
+                    exit()
+                if task_id < 0 or task_id >= len(tasks):
+                    self.set_message('Ошибка: Введён некорректный номер задачи')
+                    continue
 
-    def display_subtasks(self, subtasks):
-        parent_id = subtasks[0].parent_id
-        print(f"Пункты задачи {parent_id}:")
-        print('—————————————————')
-        for i, task in enumerate(subtasks, start=1):
-            print(f"{parent_id}.{i}: {task.name}")
-        print('—————————————————')
+                selected_task = tasks[task_id]
+                if len(selected_task.subtasks) > 1:
+                    result = self.input_subtask(selected_task)
+                else:
+                    result = selected_task
+                break
+            except ValueError:
+                self.set_message('Ошибка: Введён некорректный номер задачи')
+                continue
+            except KeyboardInterrupt:
+                print('\nclosed')
+                break
+        return result
+
+    def input_subtask(self, parent_task: Task) -> Optional[Task]:
+        result = None
+        while True:
+            try:
+                self.clear_console()
+                self.display_message()
+                parent_id = parent_task.id
+                print(f"Пункты задачи {parent_id}:")
+                print('—————————————————')
+                for i, task in enumerate(parent_task.subtasks, start=1):
+                    print(f"{parent_id}.{i}: {task.name}")
+                print('—————————————————')
+                try:
+                    subtask_id = int(input('Введите номер подзадачи: ')) - 1
+                except KeyboardInterrupt:
+                    print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
+                    exit()
+                if subtask_id < 0 or subtask_id >= len(parent_task.subtasks):
+                    self.set_message('Ошибка: Введён некорректный номер подзадачи')
+                    continue
+
+                selected_subtask = parent_task.subtasks[subtask_id]
+                result = selected_subtask
+                break
+            except ValueError:
+                self.set_message('Ошибка: Введён некорректный номер подзадачи')
+                continue
+            except KeyboardInterrupt:
+                print('\nclosed')
+                break
+        return result
 
 class TaskManager:
     last_used_id = 0
@@ -78,15 +129,15 @@ class TaskManager:
         else:
             print(f"|Ошибка: Родительская задача с ID {parent_id} не найдена|")
 
-    def run_task(self, task: Task):
+    def run_task(self, task: Union[Task, SubTask]):
         self.ui.clear_console()
-        print(f"Задача: {task.name}")
-        print(f"Описание: {task.description}", '\n')
 
         argspec = inspect.getfullargspec(task.function)
         input_args = {}
         if argspec.args:
-            print('|Введите значения для аргументов|')
+            print('|Введите значения для аргументов|\n')
+            print(f"Задача: {task.name}")
+            print(f"Описание: {task.description}", '\n')
             for arg in argspec.args:
                 arg_type = None
 
@@ -107,62 +158,14 @@ class TaskManager:
                     except KeyboardInterrupt:
                         print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
                         exit()
+        else:
+            print(f"Задача: {task.name}")
+            print(f"Описание: {task.description}", '\n')
         try:
             return task.function(**input_args)
         except Exception as e:
             print(f"|Ошибка выполнения задачи {task.name}: {e}|")
             return
-
-    def input_task(self):
-        while True:
-            try:
-                self.ui.clear_console()
-                self.ui.display_message()
-                self.ui.display_tasks(self.tasks)
-                try:
-                    task_id = int(input('Введите номер задачи: ')) - 1
-                except KeyboardInterrupt:
-                    print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
-                    exit()
-                if task_id < 0 or task_id >= len(self.tasks):
-                    self.ui.set_message('Ошибка: Введён некорректный номер задачи')
-                    continue
-
-                selected_task = self.tasks[task_id]
-                if len(selected_task.subtasks) > 1:
-                    return self.input_subtask(selected_task)
-                else:
-                    return selected_task
-            except ValueError:
-                self.ui.set_message('Ошибка: Введён некорректный номер задачи')
-                continue
-            except KeyboardInterrupt:
-                print('\nclosed')
-                break
-
-    def input_subtask(self, parent_task: Task):
-        while True:
-            try:
-                self.ui.clear_console()
-                self.ui.display_message()
-                self.ui.display_subtasks(parent_task.subtasks)
-                try:
-                    subtask_id = int(input('Введите номер подзадачи: ')) - 1
-                except KeyboardInterrupt:
-                    print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
-                    exit()
-                if subtask_id < 0 or subtask_id >= len(parent_task.subtasks):
-                    self.ui.set_message('Ошибка: Введён некорректный номер подзадачи')
-                    continue
-
-                selected_subtask = parent_task.subtasks[subtask_id]
-                return selected_subtask
-            except ValueError:
-                self.ui.set_message('Ошибка: Введён некорректный номер подзадачи')
-                continue
-            except KeyboardInterrupt:
-                print('\nclosed')
-                break
 
 def main():
     ui = ConsoleUI()
@@ -176,7 +179,7 @@ def main():
     # Основной цикл
     while True:
         manager.ui.clear_console()
-        task = manager.input_task()
+        task = ui.input_task(manager.tasks)
         result = None
         if task:
             result = manager.run_task(task)
