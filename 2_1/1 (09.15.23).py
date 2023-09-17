@@ -11,10 +11,13 @@ class Task:
         self.description = description
         self.subtasks = []
 
-class SubTask(Task):
+class SubTask():
     def __init__(self, function: Callable, parent_id: int, id: int, name: str, description: str):
         self.parent_id = parent_id
-        super().__init__(function, id, name, description)
+        self.function = function
+        self.id = id
+        self.name = name
+        self.description = description
 
 class ConsoleUI:
     def __init__(self):
