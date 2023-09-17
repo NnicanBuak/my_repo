@@ -1,4 +1,4 @@
-from typing import Union, Callable
+from typing import Callable, Union
 import inspect
 import os
 import platform
@@ -16,6 +16,37 @@ class SubTask(Task):
         self.parent_id = parent_id
         super().__init__(function, id, name, description)
 
+class ConsoleUI:
+    def __init__(self):
+        self.message = 'Ctrl+C/Del для завершения программы'
+
+    def set_message(self, message):
+        self.message = message
+
+    def display_message(self):
+        print('|' + self.message + '|' + '\n')
+
+    def clear_console(self):
+        system = platform.system()
+        if system == 'Windows':
+            os.system('cls')
+        else:
+            os.system('clear')
+
+    def display_tasks(self, tasks):
+        print('Доступные задачи:')
+        print('—————————————————')
+        for i, task in enumerate(tasks, start=1):
+            print(f"{i}: {task.name}")
+        print('—————————————————')
+
+    def display_subtasks(self, subtasks):
+        print(f"Пункты задачи {subtasks[0].parent_id}:")
+        print('—————————————————')
+        for i, task in enumerate(subtasks, start=1):
+            print(f"{i}: {task.name}")
+        print('—————————————————')
+
 class TaskManager:
     last_used_id = 0
 
@@ -23,21 +54,10 @@ class TaskManager:
         self.tasks = []
         self.ui = ui
 
-    def get_task(self, id_chain: Union[list[int], int]) -> Union[Task, None]:
-        if isinstance(id_chain, int):
-            id_chain = [id_chain]
-
-        current_task = None
-        for id in id_chain:
-            if current_task is None:
-                current_task = next((t for t in self.tasks if t.id == id), None)
-            else:
-                current_task = next((st for st in current_task.subtasks if st.id == id), None)
-            if current_task is None:
-                break
-        if current_task == None:
-            return
-        return current_task
+    def get_task(self, id):
+        if id < 0 or id >= len(self.tasks):
+            return None
+        return self.tasks[id]
 
     def add_task(self, function: Callable, name: str, description: str):
         self.last_used_id += 1
@@ -45,7 +65,7 @@ class TaskManager:
         self.tasks.append(task)
 
     def add_subtask(self, function: Callable, parent_id: int, name: str, description: str):
-        parent_task = self.get_task(parent_id)
+        parent_task = self.get_task(parent_id - 1)
         if parent_task is not None:
             subtask_id = len(parent_task.subtasks) + 1
             subtask = SubTask(function, parent_id, subtask_id, name, description)
@@ -86,84 +106,57 @@ class TaskManager:
             print(f"|Ошибка выполнения задачи {task.name}: {e}|")
             return
 
-    def display_tasks(self):
-        print('Доступные задачи:')
-        print('—————————————————')
-        for task in self.tasks:
-            print(f"{task.id}: {task.name}")
-        print('—————————————————')
-
-    def display_subtasks(self, parent_task: Task):
-        print(f"Пункты задачи {parent_task.id}:")
-        print('—————————————————')
-        for task in parent_task.subtasks:
-            print(f"{task.id}: {task.name}")
-        print('—————————————————')
-
     def input_task(self):
         while True:
             try:
                 self.ui.clear_console()
                 self.ui.display_message()
-                self.display_tasks()
-                task_id = int(input('Введите номер задачи: '))
-                if task_id < 1:
-                    self.ui.set_message('Ошибка: Введён некорректный id задачи')
+                self.ui.display_tasks(self.tasks)
+                task_id = int(input('Введите номер задачи: ')) - 1
+                if task_id < 0 or task_id >= len(self.tasks):
+                    self.ui.set_message('Ошибка: Введён некорректный номер задачи')
                     continue
 
-                selected_task = self.get_task(task_id)
-                if selected_task:
-                    if selected_task.subtasks:
-                        while True:
-                            self.ui.clear_console()
-                            self.display_subtasks(selected_task)
-                            subtask_id = int(input('Введите номер подзадачи: '))
-                            if subtask_id < 1:
-                                self.ui.set_message('Ошибка: Введён некорректный id подзадачи')
-                                continue
-
-                            selected_subtask = self.get_task([task_id, subtask_id])
-                            if selected_subtask:
-                                return selected_subtask
-                            else:
-                                self.ui.set_message('Ошибка: Подзадача с указанным id не найдена')
-                    else:
-                        return selected_task
+                selected_task = self.tasks[task_id]
+                if selected_task.subtasks:
+                    return self.input_subtask(selected_task)
                 else:
-                    self.ui.set_message('Ошибка: Задача с указанным id не найдена')
-
+                    return selected_task
             except ValueError:
-                self.ui.set_message('Ошибка: Введён некорректный id задачи или подзадачи, id - целое число')
+                self.ui.set_message('Ошибка: Введён некорректный номер задачи')
                 continue
             except KeyboardInterrupt:
                 print('\nclosed')
                 break
 
-class ConsoleUI:
-    def __init__(self):
-        self.message = 'Ctrl+C/Del для завершения программы'
+    def input_subtask(self, parent_task: Union[Task, SubTask]):
+        while True:
+            try:
+                self.ui.clear_console()
+                self.ui.display_message()
+                self.ui.display_subtasks(parent_task.subtasks)
+                subtask_id = int(input('Введите номер подзадачи: ')) - 1
+                if subtask_id < 0 or subtask_id >= len(parent_task.subtasks):
+                    self.ui.set_message('Ошибка: Введён некорректный номер подзадачи')
+                    continue
 
-    def set_message(self, message):
-        self.message = message
+                selected_subtask = parent_task.subtasks[subtask_id]
+                return selected_subtask
+            except ValueError:
+                self.ui.set_message('Ошибка: Введён некорректный номер подзадачи')
+                continue
+            except KeyboardInterrupt:
+                print('\nclosed')
+                break
 
-    def display_message(self):
-        print('|' + self.message + '|' + '\n')
-
-    def clear_console(self):
-        system = platform.system()
-        if system == 'Windows':
-            os.system('cls')
-        else:
-            os.system('clear')
-
-# Основная программа
 def main():
     ui = ConsoleUI()
     manager = TaskManager(ui)
+
     # Добавление задач в менеджер
-    manager.add_task(task1, 'Обмен значениями переменных', 'Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
-    manager.add_task(task2, 'Проверка ввода двух чисел и их сумма', 'Пользователь вводит два числа. Проверьте, что введенные данные - это числа. Если нет, выведите ошибку. Если да, то выведите их сумму.')
-    manager.add_subtask(task2_1, 2, 'Проверка ввода n чисел и их сумма', 'Доработайте задачу 2.1 так, чтобы пользователь мог вводить n разных чисел, а затем выведите их сумму. Предоставьте возможность пользователю ввести значение n.')
+    manager.add_task(task1, '(1) Обмен значениями переменных', 'Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
+    manager.add_task(task2, '(2.1) Проверка ввода двух чисел и их сумма', 'Пользователь вводит два числа. Проверьте, что введенные данные - это числа. Если нет, выведите ошибку. Если да, то выведите их сумму.')
+    manager.add_subtask(task2_1, 2, '(2.2) Проверка ввода n чисел и их сумма', 'Доработайте задачу 2.1 так, чтобы пользователь мог вводить n разных чисел, а затем выведите их сумму. Предоставьте возможность пользователю ввести значение n.')
 
     # Основной цикл
     while True:
@@ -173,13 +166,14 @@ def main():
         if task:
             result = manager.run_task(task)
         try:
-            if result:
+            if result is not None:
                 input(f"Результат: {result}\n[Enter для закрытия задачи]")
             else:
                 input(f"[Enter для закрытия задачи]")
         except KeyboardInterrupt:
             print('\nclosed')
             break
+
 # Функции решающие задачи
 def task1(a: int, b: int, c: int):
     a, b, c = b, c, a
@@ -203,6 +197,5 @@ def task2_1(numbers: list):
     print('Все введённые значения — числа')
     return sum(numbers)
 
-# Исполнение программы
 if __name__ == '__main__':
     main()
