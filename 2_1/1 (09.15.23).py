@@ -47,6 +47,7 @@ class TerminalUI:
         while True:
             self.previous_menu = None
             self.current_menu = 'tasks'
+            self.set_message('Ctrl+C/Del для закрытия приложения')
             self.clear_console()
             self.display_message()
             print('Доступные задачи:')
@@ -79,10 +80,11 @@ class TerminalUI:
         while True:
             self.previous_menu = 'tasks'
             self.current_menu = 'subtasks'
+            self.set_message('Ctrl+C/Del для возврата в предыдущее меню')
             self.clear_console()
             self.display_message()
             parent_id = parent_task.id
-            print(f"Пункты задачи {parent_id}:")
+            print(f"Задача {parent_id}:")
             print('—————————————————')
             for i, task in enumerate(parent_task.subtasks, start=1):
                 print(f"{parent_id}.\033[4m{i}\033[0m: {task.name}")
@@ -109,7 +111,7 @@ class TerminalUI:
         argspec = inspect.getfullargspec(task.function)
         input_args = {}
         if argspec.args:
-            print('|Введите значения для аргументов|\n')
+            print('|Введите значения для аргументов или вернитесь в предыдущее меню с помощью Ctrl+C/Del|\n')
             print(f"Задача: {task.name}")
             print(f"Описание: {task.description}", '\n')
             for arg in argspec.args:
@@ -135,10 +137,10 @@ class TerminalUI:
         try:
             result = task.function(**input_args)
             print(f"Результат: {result}")
-            input("Нажмите Enter для закрытия задачи...")
+            input("[Enter для закрытия задачи]")
         except Exception as e:
             print(f"|Ошибка выполнения задачи {task.name}: {e}|")
-            input("Нажмите Enter для закрытия задачи...")
+            input("[Enter для закрытия задачи]")
 
 class TaskManager:
     def __init__(self, ui):
@@ -203,7 +205,7 @@ def task2_1(number1, number2):
             print('Одно или несколько введённых значений — не числа')
             break
 
-def task2_2(numbers: list):
+def task2_2(**numbers):
     for value in numbers:
         if not isinstance(value, (int, float)):
             print('Одно или несколько введённых значений — не числа')
