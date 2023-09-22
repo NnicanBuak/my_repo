@@ -11,7 +11,7 @@ class Task:
         self.description = description
         self.subtasks = [self]
 
-class SubTask():
+class SubTask:
     def __init__(self, function: Callable, parent_id: int, id: int, name: str, description: str):
         self.parent_id = parent_id
         self.function = function
@@ -19,9 +19,17 @@ class SubTask():
         self.name = name
         self.description = description
 
-class ConsoleUI:
+class TerminalUI:
     def __init__(self):
-        self.message = 'Ctrl+C/Del для завершения программы'
+        self.message = 'Ctrl+C/Del для возврата'
+        self.current_menu = 'tasks'
+        self.previous_menu = None
+        self.current_task = None
+
+    def back(self):
+        if self.previous_menu and self.previous_menu != self.current_menu:
+            self.current_menu = self.previous_menu
+
 
     def set_message(self, message: str):
         self.message = message
@@ -36,100 +44,68 @@ class ConsoleUI:
         else:
             os.system('clear')
 
-    def input_task(self, tasks: list[Task]) -> Optional[Task]:
-        result = None
+    def input_task_menu(self, tasks: list[Task]) -> Optional[Task]:
         while True:
+            self.previous_menu = None
+            self.current_menu = 'tasks'
+            self.clear_console()
+            self.display_message()
+            print('Доступные задачи:')
+            print('—————————————————')
+            for i, task in enumerate(tasks, start=1):
+                print(f"\033[4m{i}\033[0m: {task.name}")
+            print('—————————————————')
             try:
-                self.clear_console()
-                self.display_message()
-                print('Доступные задачи:')
-                print('—————————————————')
-                for i, task in enumerate(tasks, start=1):
-                    print(f"{i}: {task.name}")
-                print('—————————————————')
-                try:
-                    task_id = int(input('Введите номер задачи: ')) - 1
-                except KeyboardInterrupt:
-                    print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
-                    exit()
-                if task_id < 0 or task_id >= len(tasks):
-                    self.set_message('Ошибка: Введён некорректный номер задачи')
-                    continue
-
-                selected_task = tasks[task_id]
-                if len(selected_task.subtasks) > 1:
-                    result = self.input_subtask(selected_task)
-                else:
-                    result = selected_task
-                break
+                task_number = int(input('Введите номер задачи: ')) - 1
             except ValueError:
                 self.set_message('Ошибка: Введён некорректный номер задачи')
                 continue
             except KeyboardInterrupt:
-                print('\nclosed')
-                break
-        return result
-
-    def input_subtask(self, parent_task: Task) -> Optional[Task]:
-        result = None
-        while True:
-            try:
                 self.clear_console()
-                self.display_message()
-                parent_id = parent_task.id
-                print(f"Пункты задачи {parent_id}:")
-                print('—————————————————')
-                for i, task in enumerate(parent_task.subtasks, start=1):
-                    print(f"{parent_id}.{i}: {task.name}")
-                print('—————————————————')
-                try:
-                    subtask_id = int(input('Введите номер подзадачи: ')) - 1
-                except KeyboardInterrupt:
-                    print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
-                    exit()
-                if subtask_id < 0 or subtask_id >= len(parent_task.subtasks):
-                    self.set_message('Ошибка: Введён некорректный номер подзадачи')
-                    continue
+                print('Приложение закрыто по запросу пользователя.')
+                exit()
 
-                selected_subtask = parent_task.subtasks[subtask_id]
-                result = selected_subtask
-                break
+            if 0 <= task_number < len(tasks):
+                selected_task = tasks[task_number]
+                if len(selected_task.subtasks) > 1:
+                    self.current_menu = 'subtasks'
+                    self.current_task = selected_task
+                    return self.input_subtask_menu(selected_task)
+                else:
+                    return selected_task
+            else:
+                self.set_message('Ошибка: Введён некорректный номер задачи')
+
+    def input_subtask_menu(self, parent_task: Task) -> Optional[Task]:
+        while True:
+            self.previous_menu = 'tasks'
+            self.current_menu = 'subtasks'
+            self.clear_console()
+            self.display_message()
+            parent_id = parent_task.id
+            print(f"Пункты задачи {parent_id}:")
+            print('—————————————————')
+            for i, task in enumerate(parent_task.subtasks, start=1):
+                print(f"{parent_id}.\033[4m{i}\033[0m: {task.name}")
+            print('—————————————————')
+            try:
+                subtask_number = int(input('Введите номер подзадачи: ')) - 1
             except ValueError:
                 self.set_message('Ошибка: Введён некорректный номер подзадачи')
                 continue
             except KeyboardInterrupt:
-                print('\nclosed')
-                break
-        return result
+                self.back()
+                return
 
-class TaskManager:
-    def __init__(self, ui):
-        self.tasks = []
-        self.ui = ui
-        self.last_used_id = 0
+            if 0 <= subtask_number < len(parent_task.subtasks):
+                return parent_task.subtasks[subtask_number]
+            else:
+                self.set_message('Ошибка: Введён некорректный номер подзадачи')
 
-    def get_task(self, id):
-        if id < 0 or id >= len(self.tasks):
-            return None
-        return self.tasks[id]
-
-    def add_task(self, function: Callable, name: str, description: str):
-        self.last_used_id += 1
-        task = Task(function, self.last_used_id, name, description)
-        self.tasks.append(task)
-
-    def add_subtask(self, function: Callable, parent_id: int, name: str, description: str):
-        parent_task = self.get_task(parent_id - 1)
-        if parent_task is not None:
-            subtask_id = len(parent_task.subtasks) + 1
-            subtask = SubTask(function, parent_id, subtask_id, name, description)
-            parent_task.subtasks.append(subtask)
-            self.last_used_id += 1
-        else:
-            print(f"|Ошибка: Родительская задача с ID {parent_id} не найдена|")
-
-    def run_task(self, task: Union[Task, SubTask]):
-        self.ui.clear_console()
+    def task_menu(self, task: Union[Task, SubTask]):
+        self.previous_menu = self.current_menu
+        self.current_menu = 'task'
+        self.clear_console()
 
         argspec = inspect.getfullargspec(task.function)
         input_args = {}
@@ -146,28 +122,51 @@ class TaskManager:
                 while True:
                     try:
                         user_input = input(f"'{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}): ")
-                        try:
-                            if arg_type:
-                                input_args[arg] = arg_type(user_input)
-                            else:
-                                input_args[arg] = user_input
-                            break
-                        except ValueError:
-                            print(f"|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else 'тип не указан'}. Попробуйте еще раз|")
+                        if arg_type:
+                            input_args[arg] = arg_type(user_input)
+                        else:
+                            input_args[arg] = user_input
+                        break
+                    except ValueError:
+                        self.set_message(f'|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз|')
                     except KeyboardInterrupt:
-                        print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
-                        exit()
-        else:
-            print(f"Задача: {task.name}")
-            print(f"Описание: {task.description}", '\n')
+                        self.back()
+                        return
+
         try:
             return task.function(**input_args)
         except Exception as e:
             print(f"|Ошибка выполнения задачи {task.name}: {e}|")
             return
 
+class TaskManager:
+    def __init__(self, ui):
+        self.tasks = []
+        self.ui = ui
+        self.last_used_id = 0
+
+    def get_task(self, id):
+        if 0 <= id < len(self.tasks):
+            return self.tasks[id]
+        return None
+
+    def add_task(self, function: Callable, name: str, description: str):
+        self.last_used_id += 1
+        task = Task(function, self.last_used_id, name, description)
+        self.tasks.append(task)
+
+    def add_subtask(self, function: Callable, parent_id: int, name: str, description: str):
+        parent_task = self.get_task(parent_id - 1)
+        if parent_task:
+            subtask_id = len(parent_task.subtasks) + 1
+            subtask = SubTask(function, parent_id, subtask_id, name, description)
+            parent_task.subtasks.append(subtask)
+            self.last_used_id += 1
+        else:
+            print(f"|Ошибка: Родительская задача с ID {parent_id} не найдена|")
+
 def main():
-    ui = ConsoleUI()
+    ui = TerminalUI()
     manager = TaskManager(ui)
 
     # Добавление задач в менеджер
@@ -177,19 +176,25 @@ def main():
 
     # Основной цикл
     while True:
-        manager.ui.clear_console()
-        task = ui.input_task(manager.tasks)
+        ui.clear_console()
+        if ui.current_menu == 'tasks':
+            task = ui.input_task_menu(manager.tasks)
+        elif ui.current_menu == 'subtasks':
+            task = ui.input_subtask_menu(ui.current_task)
+        else:
+            task = ui.current_task
+
         result = None
         if task:
-            result = manager.run_task(task)
+            result = ui.task_menu(task)
         try:
             if result is not None:
                 input(f"Результат: {result}\n[Enter для закрытия задачи]")
             else:
                 input(f"[Enter для закрытия задачи]")
         except KeyboardInterrupt:
-            print("\nПрограмма завершена по запросу пользователя (Ctrl+C/Del).")
-            exit()
+            ui.back()
+
 
 # Функции решающие задачи
 def task1(a: int, b: int, c: int):
