@@ -30,7 +30,6 @@ class TerminalUI:
         if self.previous_menu and self.previous_menu != self.current_menu:
             self.current_menu = self.previous_menu
 
-
     def set_message(self, message: str):
         self.message = message
 
@@ -134,10 +133,12 @@ class TerminalUI:
                         return
 
         try:
-            return task.function(**input_args)
+            result = task.function(**input_args)
+            print(f"Результат: {result}")
+            input("Нажмите Enter для закрытия задачи...")
         except Exception as e:
             print(f"|Ошибка выполнения задачи {task.name}: {e}|")
-            return
+            input("Нажмите Enter для закрытия задачи...")
 
 class TaskManager:
     def __init__(self, ui):
@@ -184,17 +185,8 @@ def main():
         else:
             task = ui.current_task
 
-        result = None
         if task:
-            result = ui.task_menu(task)
-        try:
-            if result is not None:
-                input(f"Результат: {result}\n[Enter для закрытия задачи]")
-            else:
-                input(f"[Enter для закрытия задачи]")
-        except KeyboardInterrupt:
-            ui.back()
-
+            ui.task_menu(task)
 
 # Функции решающие задачи
 def task1(a: int, b: int, c: int):
