@@ -1,53 +1,76 @@
-from typing import Callable, Union, Optional
+from typing import Callable, Union, Optional, NoReturn
 import inspect
 import os
 import platform
 
 class Task:
-    def __init__(self, function: Callable, id: int, name: str, description: str):
-        self.function = function
-        self.id = id
-        self.name = name
-        self.description = description
-        self.subtasks = [self]
+    def __init__(self, function: Callable, id: int, name: str, description: str) -> None:
+        self.function: Callable = function
+        self.id: int = id
+        self.name: str = name
+        self.description: str = description
+        self.subtasks: list[SubTask] = []
 
 class SubTask:
-    def __init__(self, function: Callable, parent_id: int, id: int, name: str, description: str):
-        self.parent_id = parent_id
-        self.function = function
-        self.id = id
-        self.name = name
-        self.description = description
+    def __init__(self, function: Callable, parent_id: int, id: int, name: str, description: str) -> None:
+        self.parent_id: int = parent_id
+        self.function: Callable = function
+        self.id: int = id
+        self.name: str = name
+        self.description: str = description
+
+class TaskManager:
+    def __init__(self, ui) -> None:
+        self.tasks: list[Task] = []
+        self.ui: TerminalUI = ui
+        self.last_used_id: int = 0
+
+    def add_task(self, function: Callable, name: str, description: str) -> None:
+        self.last_used_id += 1
+        task = Task(function, self.last_used_id, name, description)
+        self.tasks.append(task)
+
+    def add_subtask(self, function: Callable, parent_id: int, name: str, description: str) -> None:
+        parent_task: Task = self.tasks[parent_id - 1]
+        subtask_id: int = len(parent_task.subtasks) + 1
+        subtask = SubTask(function, parent_id, subtask_id, name, description)
+        parent_task.subtasks.append(subtask)
+        self.last_used_id += 1
 
 class TerminalUI:
-    def __init__(self):
+    def __init__(self) -> None:
         self.message = 'Ctrl+C/Del для возврата'
-        self.current_menu = 'tasks'
-        self.previous_menu = None
-        self.current_task = None
+        self.current_menu: str = 'tasks'
+        self.previous_menu: str | None = None
+        self.current_task: Optional[Task] = None
+        self.current_subtask: Optional[SubTask] = None
 
-    def back(self):
+    def back(self) -> None:
+        if not self.previous_menu:
+            self.clear_console()
+            print('Приложение закрыто по запросу пользователя.')
+            exit()
         if self.previous_menu and self.previous_menu != self.current_menu:
             self.current_menu = self.previous_menu
 
-    def set_message(self, message: str):
-        self.message = message
+    def set_message(self, message: str) -> None:
+        self.message: str = message
 
-    def display_message(self):
-        print('|' + self.message + '|' + '\n')
+    def display_message(self) -> None:
+        print('\033[40m|' + self.message + '|\033[0m' + '\n')
 
-    def clear_console(self):
-        system = platform.system()
+    def clear_console(self) -> None:
+        system: str = platform.system()
         if system == 'Windows':
             os.system('cls')
         else:
             os.system('clear')
 
     def input_task_menu(self, tasks: list[Task]) -> Optional[Task]:
+        self.previous_menu = None
+        self.current_menu = 'tasks'
+        self.set_message('Ctrl+C/Del для закрытия приложения')
         while True:
-            self.previous_menu = None
-            self.current_menu = 'tasks'
-            self.set_message('Ctrl+C/Del для закрытия приложения')
             self.clear_console()
             self.display_message()
             print('Доступные задачи:')
@@ -56,73 +79,131 @@ class TerminalUI:
                 print(f"\033[4m{i}\033[0m: {task.name}")
             print('—————————————————')
             try:
-                task_number = int(input('Введите номер задачи: ')) - 1
+                task_number: int = int(input('\n\033[47m\033[30mВведите номер задачи:\033[0m '))
             except ValueError:
-                self.set_message('Ошибка: Введён некорректный номер задачи')
-                continue
-            except KeyboardInterrupt:
-                self.clear_console()
-                print('Приложение закрыто по запросу пользователя.')
-                exit()
-
-            if 0 <= task_number < len(tasks):
-                selected_task = tasks[task_number]
-                if len(selected_task.subtasks) > 1:
-                    self.current_menu = 'subtasks'
-                    self.current_task = selected_task
-                    return self.input_subtask_menu(selected_task)
-                else:
-                    return selected_task
-            else:
-                self.set_message('Ошибка: Введён некорректный номер задачи')
-
-    def input_subtask_menu(self, parent_task: Task) -> Optional[Task]:
-        while True:
-            self.previous_menu = 'tasks'
-            self.current_menu = 'subtasks'
-            self.set_message('Ctrl+C/Del для возврата в предыдущее меню')
-            self.clear_console()
-            self.display_message()
-            parent_id = parent_task.id
-            print(f"Задача {parent_id}:")
-            print('—————————————————')
-            for i, task in enumerate(parent_task.subtasks, start=1):
-                print(f"{parent_id}.\033[4m{i}\033[0m: {task.name}")
-            print('—————————————————')
-            try:
-                subtask_number = int(input('Введите номер подзадачи: ')) - 1
-            except ValueError:
-                self.set_message('Ошибка: Введён некорректный номер подзадачи')
+                self.set_message('Ошибка: Введённое значение не номер')
                 continue
             except KeyboardInterrupt:
                 self.back()
                 return
 
-            if 0 <= subtask_number < len(parent_task.subtasks):
-                return parent_task.subtasks[subtask_number]
+            if 0 < task_number <= len(tasks):
+                selected_task: Task = tasks[task_number - 1]
+                if selected_task.subtasks:
+                    self.current_task = selected_task
+                    self.current_menu = 'tasks'
+                    self.current_menu = 'subtasks'
+                    return
+                else:
+                    return selected_task
             else:
-                self.set_message('Ошибка: Введён некорректный номер подзадачи')
+                self.set_message('Ошибка: Введённого номера нет в списке')
 
-    def task_menu(self, task: Union[Task, SubTask]):
+    def input_subtask_menu(self, parent_task: Task) -> Optional[Task | SubTask]:
+        tasks: list[SubTask] = parent_task.subtasks
+        self.previous_menu = 'tasks'
+        self.current_menu = 'subtasks'
+        self.set_message('Ctrl+C/Del для закрытия приложения')
+        while True:
+            self.clear_console()
+            self.display_message()
+            print(f"Задача {parent_task.id}:")
+            print('—————————————————')
+            print(f"{parent_task.id}.\033[4m0\033[0m: {parent_task.name}")
+            print('—————————————————')
+            print(f"Подзадачи:")
+            print('—————————————————')
+            for i, task in enumerate(tasks, start=1):
+                print(f"{parent_task.id}.\033[4m{i}\033[0m: {task.name}")
+            print('—————————————————')
+            try:
+                task_number: int = int(input('\n\033[47m\033[30mВведите номер задачи:\033[0m '))
+            except ValueError:
+                self.set_message('Ошибка: Введёное значение не номер')
+                continue
+            except KeyboardInterrupt:
+                self.back()
+                return
+
+            if 0 < task_number <= len(tasks):
+                selected_task: Task | SubTask = tasks[task_number - 1]
+                if len(tasks) > 1:
+                    self.current_menu = 'subtasks'
+                    self.current_subtask = selected_task
+                    return selected_task
+                else:
+                    self.current_subtask = selected_task
+                    return selected_task
+            elif task_number == 0:
+                selected_task = parent_task
+                return selected_task
+            else:
+                self.set_message('Ошибка: Введённого номера нет в списке')
+
+    def task_menu(self, task: Union[Task, SubTask]) -> None:
         self.previous_menu = self.current_menu
         self.current_menu = 'task'
         self.clear_console()
 
         argspec = inspect.getfullargspec(task.function)
-        input_args = {}
-        if argspec.args:
-            print('|Введите значения для аргументов или вернитесь в предыдущее меню с помощью Ctrl+C/Del|\n')
-            print(f"Задача: {task.name}")
+        input_args: dict = {}
+        if argspec.args or argspec.varargs:
+            self.message = 'Введите значения для аргументов или вернитесь в предыдущее меню с помощью Ctrl+C/Del'
+            self.display_message()
+            if isinstance(task, Task):
+                print(f"Задача {task.id}: {task.name}")
+            else:
+                print(f"Задача {task.parent_id}.{task.id}: {task.name}")
             print(f"Описание: {task.description}", '\n')
-            for arg in argspec.args:
-                arg_type = None
+        else:
+            if isinstance(task, Task):
+                print(f"Задача {task.id}: {task.name}")
+            else:
+                print(f"Задача {task.parent_id}.{task.id}: {task.name}")
+            print(f"Описание: {task.description}", '\n')
 
-                if arg in argspec.annotations:
-                    arg_type = argspec.annotations[arg]
+        if argspec.varargs:
+            arg: str = argspec.varargs
+            arg_type = None
+            if arg in argspec.annotations:
+                arg_type = argspec.annotations[arg]
+            while True:
+                try:
+                    arg_count = int(input(f'\033[47m\033[30mВведите количество аргументов {argspec.varargs} ({arg_type.__name__ if arg_type else "тип не указан"}) которое вы желаете передать задаче:\033[0m '))
+                    if arg_count >= 0:
+                        break
+                    else:
+                        print('Ошибка: Введите не отрицательное число')
+                except ValueError:
+                    print('Ошибка: Введите натуральное число')
+                except KeyboardInterrupt:
+                    self.back()
+                    return
 
+            var_args: tuple = tuple()
+            for i in range(arg_count):
                 while True:
                     try:
-                        user_input = input(f"'{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}): ")
+                        arg_value = input(f'Введите значение аргумента {argspec.varargs} ({arg_type.__name__ if arg_type else "тип не указан"}) {i + 1}: ')
+                        if arg_type:
+                            arg_value = arg_type(arg_value)
+                        var_args += (arg_value,)
+                        break
+                    except ValueError:
+                        print(f'|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз|')
+                    except KeyboardInterrupt:
+                        self.back()
+                        return
+                input_args[arg] = var_args
+
+        if argspec.args:
+            for arg in argspec.args:
+                arg_type = None
+                if arg in argspec.annotations:
+                    arg_type = argspec.annotations[arg]
+                while True:
+                    try:
+                        user_input: str = input(f"'{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}): ")
                         if arg_type:
                             input_args[arg] = arg_type(user_input)
                         else:
@@ -134,41 +215,33 @@ class TerminalUI:
                         self.back()
                         return
 
+        result = None
         try:
-            result = task.function(**input_args)
-            print(f"Результат: {result}")
-            input("[Enter для закрытия задачи]")
+            if argspec.varargs and argspec.varargs in input_args:
+                result = task.function(*input_args[argspec.varargs])
+            else:
+                result = task.function(**input_args)
         except Exception as e:
             print(f"|Ошибка выполнения задачи {task.name}: {e}|")
-            input("[Enter для закрытия задачи]")
+            try:
+                input("\n[Enter для закрытия задачи]")
+            except KeyboardInterrupt:
+                return
+        try:
+            print(f"\033[37;42mРезультат:\033[0m {result}")
+            input("\n[Enter для закрытия задачи]")
+        except KeyboardInterrupt:
+            return
 
-class TaskManager:
-    def __init__(self, ui):
-        self.tasks = []
-        self.ui = ui
-        self.last_used_id = 0
+        self.current_subtask = None
+        if self.previous_menu == 'tasks':
+            self.current_task = None
+            self.current_menu = 'tasks'
+        elif self.previous_menu == 'subtasks':
+            self.current_menu = 'subtasks'
 
-    def get_task(self, id):
-        if 0 <= id < len(self.tasks):
-            return self.tasks[id]
-        return None
 
-    def add_task(self, function: Callable, name: str, description: str):
-        self.last_used_id += 1
-        task = Task(function, self.last_used_id, name, description)
-        self.tasks.append(task)
-
-    def add_subtask(self, function: Callable, parent_id: int, name: str, description: str):
-        parent_task = self.get_task(parent_id - 1)
-        if parent_task:
-            subtask_id = len(parent_task.subtasks) + 1
-            subtask = SubTask(function, parent_id, subtask_id, name, description)
-            parent_task.subtasks.append(subtask)
-            self.last_used_id += 1
-        else:
-            print(f"|Ошибка: Родительская задача с ID {parent_id} не найдена|")
-
-def main():
+def main() -> NoReturn:
     ui = TerminalUI()
     manager = TaskManager(ui)
 
@@ -181,35 +254,38 @@ def main():
     while True:
         ui.clear_console()
         if ui.current_menu == 'tasks':
-            task = ui.input_task_menu(manager.tasks)
-        elif ui.current_menu == 'subtasks':
+            task: Optional[Union[Task, SubTask]] = ui.input_task_menu(manager.tasks)
+        elif ui.current_menu == 'subtasks' and ui.current_task:
             task = ui.input_subtask_menu(ui.current_task)
         else:
-            task = ui.current_task
+            task = ui.current_task or ui.current_subtask
 
         if task:
             ui.task_menu(task)
 
 # Функции решающие задачи
-def task1(a: int, b: int, c: int):
+def task1(a: int, b: int, c: int) -> str:
     a, b, c = b, c, a
     return f"a = {a}, b = {b}, c = {c}"
 
-def task2_1(number1, number2):
-    while True:
-        try:
-            summ = int(number1) + int(number2)
-            print('Все введённые значения — числа')
-            return summ
-        except ValueError:
-            print('Одно или несколько введённых значений — не числа')
-            break
+def task2_1(number1, number2) -> Optional[int]:
+    try:
+        summ: int = int(number1) + int(number2)
+        print('Все введённые значения — числа')
+        return summ
+    except ValueError:
+        print('Одно или несколько введённых значений — не числа')
 
-def task2_2(**numbers):
-    for value in numbers:
-        if not isinstance(value, (int, float)):
-            print('Одно или несколько введённых значений — не числа')
-            return
+def task2_2(*numbers) -> Optional[int]:
+    for number in numbers:
+        try:
+            number = int(number)
+        except:
+            try:
+                number = float(number)
+            except:
+                print('Одно или несколько введённых значений — не числа')
+                return None
     print('Все введённые значения — числа')
     return sum(numbers)
 
