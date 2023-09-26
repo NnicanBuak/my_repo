@@ -291,7 +291,19 @@ class TerminalUI:
                 return
             return
         try:
-            print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__ if argspec.annotations['return'] else 'тип не указан'}):\033[0m\n{result}")
+            if argspec.annotations['return']:
+                if isinstance(result, list) or isinstance(result, tuple):
+                    print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__}):\033[0m\n")
+                    for item in result:
+                        print(item)
+                elif isinstance(result, dict):
+                    print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__}):\033[0m\n")
+                    for key, item in result.items():
+                        print(key, item)
+                else:
+                    print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__ if argspec.annotations['return'] else 'тип не указан'}):\033[0m {result}")
+            else:
+                print(f"\033[37;42mРезультат ('тип не указан'):\033[0m {result}")
             input("\n[Enter для закрытия задачи]")
         except KeyboardInterrupt:
             self.back()
