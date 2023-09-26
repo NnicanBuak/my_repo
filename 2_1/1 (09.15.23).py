@@ -27,8 +27,10 @@ def measure_memory_time(func, *args, **kwargs) -> tuple[Any, Optional[float], Op
 
 def format_float(number: float, precision=2) -> str:
     number_parts: list[str] = str(number).split('.')
-    significant_zero_count: int = len(number_parts[1]) - len(number_parts[1].lstrip('0'))
-    return number_parts[0] + '.' + significant_zero_count * '0' + number_parts[1].lstrip('0')[0:precision] if number_parts[1].lstrip('0') else number_parts[0]
+    if len(number_parts) == 2:
+        return number_parts[0] + '.' + number_parts[1][:-(len(number_parts[1].lstrip('0'))-precision) if len(number_parts[1].lstrip('0'))-precision > 0 else 0] if number_parts[1].lstrip('0') else number_parts[0]
+    else:
+        return number_parts[0]
 class Task:
     def __init__(self, function: Callable, input_ranges: dict[str, tuple[int, int]], id: int, name: str, description: str) -> None:
         self.function: Callable = function
@@ -282,6 +284,7 @@ class TerminalUI:
             except KeyboardInterrupt:
                 self.back()
                 return
+            return
         try:
             print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__ if argspec.annotations['return'] else 'тип не указан'}):\033[0m {result}")
             input("\n[Enter для закрытия задачи]")
@@ -352,13 +355,13 @@ def task3_1(x: int) -> str:
     def power_of_five(x: int) -> int:
         return x**5
     result, elapsed_time, memory_diff = measure_memory_time(power_of_five, x)
-    return f"x^5: {result}, время: {format_float(elapsed_time) if elapsed_time else elapsed_time} секунд, память: {format_float(memory_diff, 5) if memory_diff else memory_diff} байт"
+    return f"x^5: {result}, время: {format_float(elapsed_time) if elapsed_time != None else elapsed_time} секунд, память: {format_float(memory_diff, 5) if memory_diff != None else memory_diff} байт"
 
 def task3_2(x: int) -> str:
     def power_of_five(x: int) -> int:
         return x*x*x*x*x
     result, elapsed_time, memory_diff = measure_memory_time(power_of_five, x)
-    return f"x^5: {result}, время: {format_float(elapsed_time) if elapsed_time else elapsed_time} секунд, память: {format_float(memory_diff, 5) if memory_diff else memory_diff} байт"
+    return f"x^5: {result}, время: {format_float(elapsed_time) if elapsed_time != None else elapsed_time} секунд, память: {format_float(memory_diff, 5) if memory_diff != None else memory_diff} байт"
 
 if __name__ == '__main__':
     main()
