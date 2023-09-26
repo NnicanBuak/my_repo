@@ -236,16 +236,16 @@ class TerminalUI:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
                                 if not min_limit <= len(arg_value) <= max_limit:
-                                    self.display_message(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
                                     continue
                             elif isinstance(arg_value, (int, float)):
                                 if not min_limit <= arg_value <= max_limit:
-                                    self.display_message(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
                                     continue
                         input_args[arg] = arg_value
                         break
                     except ValueError:
-                        self.display_message(f'|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз|')
+                        self.display_message(f'Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз')
                     except KeyboardInterrupt:
                         self.back()
                         return
