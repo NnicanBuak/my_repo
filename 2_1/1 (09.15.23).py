@@ -168,12 +168,18 @@ class TerminalUI:
             self.message = 'Введите значения для аргументов или вернитесь в предыдущее меню с помощью Ctrl+C/Del'
             self.display_message()
             if isinstance(task, Task):
-                print(f"Задача {task.id}: {task.name}")
+                if task.subtasks:
+                    print(f"Задача {task.id}.1: {task.name}")
+                else:
+                    print(f"Задача {task.id}: {task.name}")
             elif isinstance(task, SubTask):
                 print(f"Задача {task.parent_id}.{task.id}: {task.name}")
         else:
             if isinstance(task, Task):
-                print(f"Задача {task.id}: {task.name}")
+                if task.subtasks:
+                    print(f"Задача {task.id}.1: {task.name}")
+                else:
+                    print(f"Задача {task.id}: {task.name}")
             elif isinstance(task, SubTask):
                 print(f"Задача {task.parent_id}.{task.id}: {task.name}")
         print(f"Описание: {task.description}", '\n')
