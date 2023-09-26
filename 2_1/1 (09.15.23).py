@@ -47,7 +47,7 @@ class TaskManager:
 
     def add_subtask(self, function: Callable, input_ranges: dict[str, tuple[int, ...]], parent_id: int, name: str, description: str) -> None:
         parent_task: Task = self.tasks[parent_id - 1]
-        subtask_id: int = len(parent_task.subtasks) + 1
+        subtask_id: int = len(parent_task.subtasks) + 2
         subtask = SubTask(function, input_ranges, parent_id, subtask_id, name, description)
         parent_task.subtasks.append(subtask)
 
@@ -126,11 +126,11 @@ class TerminalUI:
             self.display_message()
             print(f"Задача {parent_task.id}:")
             print('\033[33m—————————————————\033[0m')
-            print(f"{parent_task.id}.\033[34;4m0\033[0m: {parent_task.name}")
+            print(f"{parent_task.id}.\033[34;4m1\033[0m: {parent_task.name}")
             print('\033[33m—————————————————\033[0m')
             print(f"Подзадачи:")
             print('\033[33m—————————————————\033[0m')
-            for i, task in enumerate(tasks, start=1):
+            for i, task in enumerate(tasks, start=2):
                 print(f"{parent_task.id}.\033[34;4m{i}\033[0m: {task.name}")
             print('\033[33m—————————————————\033[0m')
             try:
@@ -142,8 +142,8 @@ class TerminalUI:
                 self.back()
                 return
 
-            if 0 < task_number <= len(tasks):
-                selected_task: Task | SubTask = tasks[task_number - 1]
+            if 1 < task_number <= len(tasks) + 1:
+                selected_task: Task | SubTask = tasks[task_number - 2]
                 if len(tasks) > 1:
                     self.current_menu = 'subtasks'
                     self.current_subtask = selected_task
@@ -151,7 +151,7 @@ class TerminalUI:
                 else:
                     self.current_subtask = selected_task
                     return selected_task
-            elif task_number == 0:
+            elif task_number == 1:
                 selected_task = parent_task
                 return selected_task
             else:
