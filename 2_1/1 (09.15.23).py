@@ -9,22 +9,24 @@ except ImportError:
     psutil = None
 
 class Task:
-    def __init__(self, function: Callable, input_ranges: dict[str, tuple[int, int]], id: int, name: str, description: str) -> None:
+    def __init__(self, function: Callable, input_ranges: dict[str, tuple[int | None, int | None]], id: int, name: str, description: str, comment: str) -> None:
         self.function: Callable = function
         self.id: int = id
         self.name: str = name
         self.description: str = description
+        self.comment: str = comment
         self.subtasks: list[SubTask] = []
-        self.input_ranges: dict[str, tuple[int, int]] = input_ranges
+        self.input_ranges: dict[str, tuple[int | None, int | None]] = input_ranges
 
 class SubTask:
-    def __init__(self, function: Callable, input_ranges: dict[str, tuple[int, int]], parent_id: int, id: int, name: str, description: str) -> None:
+    def __init__(self, function: Callable, input_ranges: dict[str, tuple[int | None, int | None]], parent_id: int, id: int, name: str, description: str, comment: str) -> None:
         self.parent_id: int = parent_id
         self.function: Callable = function
         self.id: int = id
         self.name: str = name
         self.description: str = description
-        self.input_ranges: dict[str, tuple[int, int]] = input_ranges
+        self.comment: str = comment
+        self.input_ranges: dict[str, tuple[int | None, int | None]] = input_ranges
 
 class TaskManager:
     def __init__(self, ui) -> None:
@@ -32,15 +34,15 @@ class TaskManager:
         self.ui: TerminalUI = ui
         self.last_used_id: int = 0
 
-    def add_task(self, function: Callable, input_ranges: dict[str, tuple[int, int]], name: str, description: str) -> None:
+    def add_task(self, function: Callable, input_ranges: dict[str, tuple[int | None, int | None]], name: str, description: str, comment: str = '') -> None:
         self.last_used_id += 1
-        task = Task(function, input_ranges, self.last_used_id, name, description)
+        task = Task(function, input_ranges, self.last_used_id, name, description, comment)
         self.tasks.append(task)
 
-    def add_subtask(self, function: Callable, input_ranges: dict[str, tuple[int, int]], parent_id: int, name: str, description: str) -> None:
+    def add_subtask(self, function: Callable, input_ranges: dict[str, tuple[int | None, int | None]], parent_id: int, name: str, description: str, comment: str = '') -> None:
         parent_task: Task = self.tasks[parent_id - 1]
         subtask_id: int = len(parent_task.subtasks) + 2
-        subtask = SubTask(function, input_ranges, parent_id, subtask_id, name, description)
+        subtask = SubTask(function, input_ranges, parent_id, subtask_id, name, description, comment)
         parent_task.subtasks.append(subtask)
 
 class TerminalUI:
@@ -174,7 +176,8 @@ class TerminalUI:
                     print(f"Задача {task.id}: {task.name}")
             elif isinstance(task, SubTask):
                 print(f"Задача {task.parent_id}.{task.id}: {task.name}")
-        print(f"Описание: {task.description}", '\n')
+        print(f"Описание: {task.description}")
+        print(f"Комментарий: {task.comment}", '\n')
 
         if argspec.varargs:
             arg: str = argspec.varargs
@@ -204,11 +207,23 @@ class TerminalUI:
                         if task.input_ranges and task.input_ranges[arg]:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
-                                if not min_limit <= len(arg_value) <= max_limit:
+                                if min_limit and max_limit and not min_limit <= len(arg_value) <= max_limit:
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    continue
+                                elif min_limit and not min_limit <= len(arg_value):
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    continue
+                                elif max_limit and not len(arg_value) <= max_limit:
                                     self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
                                     continue
                             elif isinstance(arg_value, (int, float)):
-                                if not min_limit <= arg_value <= max_limit:
+                                if min_limit and max_limit and not min_limit <= arg_value <= max_limit:
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    continue
+                                elif min_limit and not min_limit <= arg_value:
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    continue
+                                elif max_limit and not arg_value <= max_limit:
                                     self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
                                     continue
                         var_args += (arg_value,)
@@ -305,11 +320,15 @@ def main() -> NoReturn:
     manager = TaskManager(ui)
 
     # Добавление задач в менеджер
-    manager.add_task(task1, {}, 'Обмен значениями переменных', 'Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
+    manager.add_task(task1_1, {}, 'Обмен значениями переменных', 'Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
     manager.add_task(task2_1, {}, 'Проверка ввода двух чисел и их сумма', 'Пользователь вводит два числа. Проверьте, что введенные данные - это числа. Если нет, выведите ошибку. Если да, то выведите их сумму.')
     manager.add_subtask(task2_2, {}, 2, 'Проверка ввода n чисел и их сумма', 'Доработайте задачу 2.1 так, чтобы пользователь мог вводить n разных чисел, а затем выведите их сумму. Предоставьте возможность пользователю ввести значение n.')
-    manager.add_task(task3_1, {'x': (0, 100)},'Возведение в 5 степень', 'Дано число x в диапазоне от 0 до 100. Вычислите x в 5-ой степени.')
-    manager.add_subtask(task3_2, {'x': (0, 100)}, 3, 'Возведение в 5 степень с помощью умножения', 'Измените задачу 3.1 так, чтобы для вычисления степени использовалось только умножение.')
+    manager.add_task(task3_1, {'x': (0, 100)},'Возведение в 5 степень', 'Дано число x в диапазоне от 0 до 100. Вычислите x в 5-ой степени.', 'x вычесляется с помощью функции `x**5`')
+    manager.add_subtask(task3_2, {'x': (0, 100)}, 3, 'Возведение в 5 степень с помощью умножения', 'Измените задачу 3.1 так, чтобы для вычисления степени использовалось только умножение.', 'Невозможно создать более оптимизированный метод возведения в степени сложности O(1) по времени и памяти чем `x**5` как в задаче 3.1, потому что операция слишком проста, но первый способ яляется предпочтительным из-за лучшей семантики.')
+    manager.add_task(task4_1, {'number': (0, 250)},'Проверка числа на соответствие Числу Фибоначчи', 'Пользователь может вводить число от 0 до 250. Проверьте, принадлежит ли введенное число числам Фибоначчи.')
+    manager.add_task(task5_1, {},'Получение времени года по месяцу (1 способ)', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
+    manager.add_subtask(task5_2, {}, 5, 'Получение времени года по месяцу (2 способ)', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
+    manager.add_task(task6_1, {'N': (1,)},'Получение с', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
 
     # Основной цикл
     while True:
@@ -325,19 +344,18 @@ def main() -> NoReturn:
             ui.task_menu(task)
 
 # Функции решающие задачи
-def task1(a: int, b: int, c: int) -> str:
+def task1_1(a: int, b: int, c: int) -> str:
     a, b, c = b, c, a
     return f"a = {a}, b = {b}, c = {c}"
 
-def task2_1(number1, number2) -> int | None:
+def task2_1(number1, number2) -> str:
     try:
         summ: int = int(number1) + int(number2)
-        print('Все введённые значения — числа')
-        return summ
+        return f"Все введёные значения — числа, их сумма: {summ}"
     except ValueError:
-        print('Одно или несколько введённых значений — не числа')
+        return 'Одно или несколько введённых значений — не числа'
 
-def task2_2(*numbers) -> int | float | None:
+def task2_2(*numbers) -> str:
     summ: int | float = 0
     for number in numbers:
         try:
@@ -346,10 +364,8 @@ def task2_2(*numbers) -> int | float | None:
             try:
                 summ += float(number)
             except:
-                print('Одно или несколько введённых значений — не числа')
-                return None
-    print('Все введённые значения — числа')
-    return summ
+                return 'Одно или несколько введённых значений — не числа'
+    return f"Все введёные значения — числа, их сумма: {summ}"
 
 def task3_1(x: int) -> str:
     def power_of_five(x: int) -> int:
@@ -362,6 +378,40 @@ def task3_2(x: int) -> str:
         return x*x*x*x*x
     result, elapsed_time, memory_diff = measure_memory_time(power_of_five, x)
     return f"x^5: {result}, время: {format_float(elapsed_time) if elapsed_time != None else elapsed_time} секунд, память: {format_float(memory_diff, 5) if memory_diff != None else memory_diff} байт"
+
+def task4_1(number: int) -> str:
+    def get_fibonacci(n: int) -> int:
+        if n == 0 or 1:
+            return n
+        else:
+            return get_fibonacci(n-1) + get_fibonacci(n-2)
+    for n in range(0, 13):
+        if number == get_fibonacci(n):
+            return f"{number} — Число Фибоначчи!"
+    return f"{number} — не Число Фибоначчи"
+
+def task5_1(month: int) -> str:
+    if month in [12, 1, 2]:
+        return 'Зима'
+    elif month in [3, 4, 5]:
+        return 'Весна'
+    elif month in [6, 7, 8]:
+        return 'Лето'
+    elif month in [9, 10, 11]:
+        return 'Осень'
+    else:
+        return 'В 1 году — 12 месяцев. Время года не определенно'
+
+def task5_2(month: int) -> str:
+    seasons: dict[int, str] = {1: 'Зима', 2: 'Зима', 3: 'Весна', 4: 'Весна', 5: 'Весна',
+               6: 'Лето', 7: 'Лето', 8: 'Лето', 9: 'Осень', 10: 'Осень',
+               11: 'Осень', 12: 'Зима'}
+    return seasons.get(month, 'В 1 году — 12 месяцев. Время года не определенно')
+
+def task6_1(N: int) -> str:
+    even_count = N // 2
+    odd_count = N - even_count
+    return f"сумма: {sum(range(1, N))}, кол-во чётных: {even_count}, кол-во нечётных: {odd_count}"
 
 if __name__ == '__main__':
     main()
