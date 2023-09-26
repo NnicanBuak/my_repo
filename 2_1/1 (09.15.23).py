@@ -15,7 +15,7 @@ class Task:
         self.name: str = name
         self.description: str = description
         self.subtasks: list[SubTask] = []
-        self.input_ranges: dict[str, tuple[int, ...]] = {}
+        self.input_ranges: dict[str, tuple[int, ...]] = input_ranges
         # input_range validation
         for input_range in input_ranges.values():
             if len(input_range) > 2:
@@ -28,7 +28,7 @@ class SubTask:
         self.id: int = id
         self.name: str = name
         self.description: str = description
-        self.input_ranges: dict[str, tuple[int, ...]] = {}
+        self.input_ranges: dict[str, tuple[int, ...]] = input_ranges
         # input_range validation
         for input_range in input_ranges.values():
             if len(input_range) > 2:
@@ -203,11 +203,11 @@ class TerminalUI:
                         if task.input_ranges and task.input_ranges[arg]:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
-                                if not min_limit < len(arg_value) < max_limit:
+                                if not min_limit <= len(arg_value) <= max_limit:
                                     print(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
                                     continue
                             elif isinstance(arg_value, (int, float)):
-                                if not min_limit < arg_value < max_limit:
+                                if not min_limit <= arg_value <= max_limit:
                                     print(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
                                     continue
                         var_args += (arg_value,)
@@ -232,11 +232,11 @@ class TerminalUI:
                         if task.input_ranges and task.input_ranges[arg]:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
-                                if not min_limit < len(arg_value) < max_limit:
+                                if not min_limit <= len(arg_value) <= max_limit:
                                     print(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
                                     continue
                             elif isinstance(arg_value, (int, float)):
-                                if not min_limit < arg_value < max_limit:
+                                if not min_limit <= arg_value <= max_limit:
                                     print(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
                                     continue
                         input_args[arg] = arg_value
