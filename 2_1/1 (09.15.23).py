@@ -201,35 +201,35 @@ class TerminalUI:
             for i in range(arg_count):
                 while True:
                     try:
-                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента {argspec.varargs} ({arg_type.__name__ if arg_type else 'тип не указан'}) {i + 1}{f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges and task.input_ranges[arg] else ''}{' символов' if arg_type == 'str' else ' чисел' if arg_type == 'int' or 'float' else ''}:\033[0m ")
+                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента {argspec.varargs} ({arg_type.__name__ if arg_type else 'тип не указан'}) {i + 1}{f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges and task.input_ranges[arg] else ''}{' символов' if arg_type == 'str' else ''}:\033[0m ")
                         if arg_type:
                             arg_value = arg_type(arg_value)
                         if task.input_ranges and task.input_ranges[arg]:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
                                 if min_limit and max_limit and not min_limit <= len(arg_value) <= max_limit:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                                 elif min_limit and not min_limit <= len(arg_value):
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                                 elif max_limit and not len(arg_value) <= max_limit:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                             elif isinstance(arg_value, (int, float)):
                                 if min_limit and max_limit and not min_limit <= arg_value <= max_limit:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                                 elif min_limit and not min_limit <= arg_value:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                                 elif max_limit and not arg_value <= max_limit:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                         var_args += (arg_value,)
                         break
                     except ValueError:
-                        self.display_message(f'Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз')
+                        self.display_message(f'Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте ещё раз')
                     except KeyboardInterrupt:
                         self.back()
                         return
@@ -242,35 +242,35 @@ class TerminalUI:
                     arg_type = argspec.annotations[arg]
                 while True:
                     try:
-                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента '{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}){f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges and task.input_ranges[arg] else ''}{' символов' if arg_type == 'str' else ' чисел' if arg_type == 'int' or 'float' else ''}:\033[0m ")
+                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента '{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}){f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges and task.input_ranges[arg] else ''}{' символов' if arg_type == 'str' else ''}:\033[0m ")
                         if arg_type:
                             arg_value = arg_type(arg_value)
                         if task.input_ranges and task.input_ranges[arg]:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
                                 if min_limit and max_limit and not min_limit <= len(arg_value) <= max_limit:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                                 elif min_limit and not min_limit <= len(arg_value):
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                                 elif max_limit and not len(arg_value) <= max_limit:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                             elif isinstance(arg_value, (int, float)):
                                 if min_limit and max_limit and not min_limit <= arg_value <= max_limit:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                                 elif min_limit and not min_limit <= arg_value:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                                 elif max_limit and not arg_value <= max_limit:
-                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте ещё раз')
                                     continue
                         input_args[arg] = arg_value
                         break
                     except ValueError:
-                        self.display_message(f'Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз')
+                        self.display_message(f'Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте ещё раз')
                     except KeyboardInterrupt:
                         self.back()
                         return
@@ -340,7 +340,8 @@ def main() -> NoReturn:
     manager.add_task(task4_1, {'number': (0, 250)},'Проверка числа на соответствие Числу Фибоначчи', 'Пользователь может вводить число от 0 до 250. Проверьте, принадлежит ли введенное число числам Фибоначчи.')
     manager.add_task(task5_1, {},'Получение времени года по месяцу (1 способ)', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
     manager.add_subtask(task5_2, {}, 5, 'Получение времени года по месяцу (2 способ)', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
-    manager.add_task(task6_1, {'N': (1, None)},'Получение с', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
+    manager.add_task(task6_1, {'N': (2, None)},'Получение уммы, кол-ва чётных и нечётных чисел из диапазона', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
+    manager.add_task(task7_1, {'N': (2, 250)},'Получение количества делителей для чисел из диапазона', 'Для каждого из чисел от 1 до N, где N меньше 250 выведите количество делителей. N вводит пользователь. Выведите число и через пробел количество его делителей. Делителем может быть 1.')
 
     # Основной цикл
     while True:
@@ -421,9 +422,15 @@ def task5_2(month: int) -> str:
     return seasons.get(month, 'В 1 году — 12 месяцев. Время года не определенно')
 
 def task6_1(N: int) -> str:
-    even_count = N // 2
-    odd_count = N - even_count
-    return f"сумма: {sum(range(1, N))}, кол-во чётных: {even_count}, кол-во нечётных: {odd_count}"
+    even_count: int = N // 2
+    odd_count: int = N - even_count
+    return f"сумма: {sum(range(1, N + 1))}, кол-во чётных: {even_count}, кол-во нечётных: {odd_count}"
+
+def task7_1(N: int) -> dict[int, int]:
+    result: dict[int, int] = {}
+    for number in range(1, N + 1):
+        result[number] = len([i for i in range(1, number + 1) if number % i == 0])
+    return result
 
 if __name__ == '__main__':
     main()
