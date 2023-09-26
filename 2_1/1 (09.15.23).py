@@ -3,6 +3,7 @@ import inspect
 import os
 import platform
 import time
+import random
 try:
     import psutil
 except ImportError:
@@ -540,17 +541,9 @@ def task16_1():
                         board[start_row + i][start_col] = 'X'
                     break
 
-    print("Давайте сыграем в морской бой!")
-    # Размещаем корабли на поле
     for ship_length in [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]:
         place_ship(board, ship_length)
-
-    print("Расположение кораблей:")
-    print_board(board)
-
-    board = []
-    for ship_length in [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]:
-        place_ship(board, ship_length)
+    return board
 
 if __name__ == '__main__':
     main()
