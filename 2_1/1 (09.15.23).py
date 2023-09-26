@@ -8,29 +8,6 @@ try:
 except ImportError:
     psutil = None
 
-def measure_memory_time(func, *args, **kwargs) -> tuple[Any, Optional[float], Optional[float]]:
-    if not psutil:
-        result: Any = func(*args, **kwargs)
-        return result, None, None
-    start_time: float = time.time()
-    start_memory: Any = psutil.Process().memory_info().rss
-
-    result = func(*args, **kwargs)
-
-    end_time: float = time.time()
-    end_memory: Any = psutil.Process().memory_info().rss
-
-    elapsed_time: float = end_time - start_time
-    memory_diff: Any = end_memory - start_memory
-
-    return result, elapsed_time, memory_diff
-
-def format_float(number: float, precision=2) -> str:
-    number_parts: list[str] = str(number).split('.')
-    if len(number_parts) == 2:
-        return number_parts[0] + '.' + number_parts[1][:-(len(number_parts[1].lstrip('0'))-precision) if len(number_parts[1].lstrip('0'))-precision > 0 else 0] if number_parts[1].lstrip('0') else number_parts[0]
-    else:
-        return number_parts[0]
 class Task:
     def __init__(self, function: Callable, input_ranges: dict[str, tuple[int, int]], id: int, name: str, description: str) -> None:
         self.function: Callable = function
@@ -299,6 +276,29 @@ class TerminalUI:
         elif self.previous_menu == 'subtasks':
             self.current_menu = 'subtasks'
 
+def measure_memory_time(func, *args, **kwargs) -> tuple[Any, Optional[float], Optional[float]]:
+    if not psutil:
+        result: Any = func(*args, **kwargs)
+        return result, None, None
+    start_time: float = time.time()
+    start_memory: Any = psutil.Process().memory_info().rss
+
+    result = func(*args, **kwargs)
+
+    end_time: float = time.time()
+    end_memory: Any = psutil.Process().memory_info().rss
+
+    elapsed_time: float = end_time - start_time
+    memory_diff: Any = end_memory - start_memory
+
+    return result, elapsed_time, memory_diff
+
+def format_float(number: float, precision=2) -> str:
+    number_parts: list[str] = str(number).split('.')
+    if len(number_parts) == 2:
+        return number_parts[0] + '.' + number_parts[1][:-(len(number_parts[1].lstrip('0'))-precision) if len(number_parts[1].lstrip('0'))-precision > 0 else 0] if number_parts[1].lstrip('0') else number_parts[0]
+    else:
+        return number_parts[0]
 
 def main() -> NoReturn:
     ui = TerminalUI()
