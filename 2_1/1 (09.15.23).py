@@ -50,7 +50,6 @@ class TaskManager:
         subtask_id: int = len(parent_task.subtasks) + 1
         subtask = SubTask(function, input_ranges, parent_id, subtask_id, name, description)
         parent_task.subtasks.append(subtask)
-        self.last_used_id += 1
 
 class TerminalUI:
     def __init__(self) -> None:
