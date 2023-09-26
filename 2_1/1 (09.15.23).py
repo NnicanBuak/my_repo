@@ -4,6 +4,8 @@ import os
 import platform
 import time
 import random
+import tkinter as tk
+from tkinter import messagebox
 try:
     import psutil
 except ImportError:
@@ -397,6 +399,8 @@ def main() -> NoReturn:
     manager.add_task(task_11_1, {}, 'Последний элемент массива', 'Задайте одномерный массив в коде и выведите в консоль последний элемент данного массива тремя способами.', 'первый способ - array[-1], второй способ - array[len(array)-1], третий способ - next(reversed(array))')
     manager.add_task(task_12_1, {}, 'Массив в обратном порядке', 'Задайте одномерный массив в коде и выведите в консоль массив в обратном порядке.', 'Зачем в коде если уже реализован интерфейс')
     manager.add_task(task_13_1, {}, 'Сумма элементов массива через рекурсию', 'Реализуйте нахождение суммы элементов массива через рекурсию. Массив можно задать в коде.', 'Зачем в коде если уже реализован интерфейс')
+    manager.add_task(task_14_1, {}, 'Запуск оконного приложения конвертера рублей в доллары', 'Реализуйте оконное приложение-конвертер рублей в доллары. Создайте окно ввода для суммы в рублях.')
+    manager.add_subtask(task_14_2, {}, 14, 'Запуск оконного приложения конвертера рублей в доллары и наооборот', 'Реализуйте оконное приложение-конвертер рублей в доллары. Создайте окно ввода для суммы в рублях.')
     manager.add_task(task_15_1, {'N': (5, 20), 'M': (5, 20)}, 'Таблица умножения', 'Реализуйте вывод таблицы умножения в консоль размером N на M которые вводит пользователь, но при этом они не могут быть больше 20 и меньше 5.')
     manager.add_task(task_16_1, {}, 'Морской бой', 'Реализуйте вывод в консоль поле для морского боя с выставленными кораблями. Данные о кораблях, можно подгружать из файла или генерировать самостоятельно.')
 
@@ -536,7 +540,73 @@ def task_13_1(array: list[int]) -> int:
     else:
         return array[0] + task_13_1(array[1:])
 
-# Задача 14.1 и Задача 14.2 требуют создания графического интерфейса пользователя и не могут быть реализованы в текстовом формате.
+def task_14_1():
+    def convert_to_usd() -> None:
+        rub: str = rub_entry.get()
+        try:
+            usd: float = float(rub) / exchange_rate
+            result_label.config(text=f"{usd:.2f} USD")
+        except ValueError:
+            messagebox.showerror("Ошибка", "Введите корректное число")
+
+    window = tk.Tk()
+    window.title("Конвертер валют: RUB в USD")
+
+    exchange_rate = 97.0
+
+    rub_label = tk.Label(window, text="RUB:")
+    rub_label.pack()
+
+    rub_entry = tk.Entry(window)
+    rub_entry.pack()
+
+    convert_button = tk.Button(window, text="Конвертировать", command=convert_to_usd)
+    convert_button.pack()
+
+    result_label = tk.Label(window, text="")
+    result_label.pack()
+
+    window.mainloop()
+
+def task_14_2() -> None:
+    def convert_currency() -> None:
+        amount: str = amount_entry.get()
+        currency: str = var.get()
+        try:
+            if currency == "RUB":
+                result: float = float(amount) / exchange_rate
+            else:
+                result = float(amount) * exchange_rate
+            result_label.config(text=f"{result:.2f} {currency}")
+        except ValueError:
+            messagebox.showerror("Ошибка", "Введите корректное число")
+
+    window = tk.Tk()
+    window.title("Конвертер валют: RUB и USD")
+
+    exchange_rate = 97.0
+
+    amount_label = tk.Label(window, text="Сумма:")
+    amount_label.pack()
+
+    amount_entry = tk.Entry(window)
+    amount_entry.pack()
+
+    var = tk.StringVar(value="RUB")
+
+    rub_to_usd_radio = tk.Radiobutton(window, text="RUB в USD", variable=var, value="USD")
+    rub_to_usd_radio.pack()
+
+    usd_to_rub_radio = tk.Radiobutton(window, text="USD в RUB", variable=var, value="RUB")
+    usd_to_rub_radio.pack()
+
+    convert_button = tk.Button(window, text="Конвертировать", command=convert_currency)
+    convert_button.pack()
+
+    result_label = tk.Label(window, text="")
+    result_label.pack()
+
+    window.mainloop()
 
 def task_15_1(N: int, M: int) -> list[str]:
     result: list[str] = []
