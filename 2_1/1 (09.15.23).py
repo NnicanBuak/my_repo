@@ -290,7 +290,7 @@ class TerminalUI:
                 return
             return
         try:
-            print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__ if argspec.annotations['return'] else 'тип не указан'}):\033[0m {result}")
+            print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__ if argspec.annotations['return'] else 'тип не указан'}):\033[0m\n{result}")
             input("\n[Enter для закрытия задачи]")
         except KeyboardInterrupt:
             self.back()
@@ -348,7 +348,7 @@ def main() -> NoReturn:
     manager.add_task(task_11_1, {}, 'Последний элемент массива', 'Задайте одномерный массив в коде и выведите в консоль последний элемент данного массива тремя способами.', 'первый способ - array[-1], второй способ - array[len(array)-1], третий способ - next(reversed(array))')
     manager.add_task(task_12_1, {}, 'Массив в обратном порядке', 'Задайте одномерный массив в коде и выведите в консоль массив в обратном порядке.')
     manager.add_task(task_13_1, {}, 'Сумма элементов массива через рекурсию', 'Реализуйте нахождение суммы элементов массива через рекурсию. Массив можно задать в коде.')
-    manager.add_task(task_15_1, {}, 'Таблица умножения', 'Реализуйте вывод таблицы умножения в консоль размером n на m которые вводит пользователь, но при этом они не могут быть больше 20 и меньше 5.')
+    manager.add_task(task_15_1, {'N': (5, 20), 'M': (5, 20)}, 'Таблица умножения', 'Реализуйте вывод таблицы умножения в консоль размером N на M которые вводит пользователь, но при этом они не могут быть больше 20 и меньше 5.')
 
     # Основной цикл
     while True:
@@ -488,13 +488,69 @@ def task_13_1(array: list[int]) -> int:
 
 # Задача 14.1 и Задача 14.2 требуют создания графического интерфейса пользователя и не могут быть реализованы в текстовом формате.
 
-def task_15_1(n: int, m: int) -> None:
-    if n < 5 or m < 5 or n > 20 or m > 20:
-        print("n и m должны быть в диапазоне от 5 до 20")
-        return
-    for i in range(1, n+1):
-        for j in range(1, m+1):
-            print(f"{i} * {j} = {i*j}")
+def task_15_1(N: int, M: int) -> list[str]:
+    result: list[str] = []
+    for i in range(1, N+1):
+        for j in range(1, M+1):
+            result.append(f"{i} * {j} = {i*j}")
+    return result
+
+def task16_1():
+    # Создаем пустое поле
+    board = []
+    for x in range(0, 10):
+        board.append(["O"] * 10)
+
+    def can_place_ship(board, ship_length, start_row, start_col, orientation):
+        if orientation == 'horizontal':
+            if start_col + ship_length > len(board[0]):
+                return False
+            for i in range(-1, ship_length + 1):
+                for j in range(-1, 2):
+                    if not (0 <= start_row + j < len(board) and 0 <= start_col + i < len(board[0])):
+                        continue
+                    if board[start_row + j][start_col + i] == 'X':
+                        return False
+        else:
+            if start_row + ship_length > len(board):
+                return False
+            for i in range(-1, 2):
+                for j in range(-1, ship_length + 1):
+                    if not (0 <= start_row + j < len(board) and 0 <= start_col + i < len(board[0])):
+                        continue
+                    if board[start_row + j][start_col + i] == 'X':
+                        return False
+        return True
+
+    def place_ship(board, ship_length):
+        while True:
+            orientation = random.choice(['horizontal', 'vertical'])
+            if orientation == 'horizontal':
+                start_row = random.randint(0, len(board) - 1)
+                start_col = random.randint(0, len(board[0]) - ship_length)
+                if can_place_ship(board, ship_length, start_row, start_col, orientation):
+                    for i in range(ship_length):
+                        board[start_row][start_col + i] = 'X'
+                    break
+            else:
+                start_row = random.randint(0, len(board) - ship_length)
+                start_col = random.randint(0, len(board[0]) - 1)
+                if can_place_ship(board, ship_length, start_row, start_col, orientation):
+                    for i in range(ship_length):
+                        board[start_row + i][start_col] = 'X'
+                    break
+
+    print("Давайте сыграем в морской бой!")
+    # Размещаем корабли на поле
+    for ship_length in [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]:
+        place_ship(board, ship_length)
+
+    print("Расположение кораблей:")
+    print_board(board)
+
+    board = []
+    for ship_length in [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]:
+        place_ship(board, ship_length)
 
 if __name__ == '__main__':
     main()
