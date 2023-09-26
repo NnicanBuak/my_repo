@@ -293,11 +293,11 @@ class TerminalUI:
         try:
             if argspec.annotations['return']:
                 if isinstance(result, list) or isinstance(result, tuple):
-                    print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__}):\033[0m\n")
+                    print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__}):\033[0m")
                     for item in result:
                         print(item)
                 elif isinstance(result, dict):
-                    print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__}):\033[0m\n")
+                    print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__}):\033[0m")
                     for key, item in result.items():
                         print(key, item)
                 else:
