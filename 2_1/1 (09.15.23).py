@@ -70,7 +70,10 @@ class TerminalUI:
     def set_message(self, message: str) -> None:
         self.message: str = message
 
-    def display_message(self) -> None:
+    def display_message(self, message = None) -> None:
+        if message:
+            print('\033[40m|' + message + '|\033[0m' + '\n')
+            return
         print('\033[40m|' + self.message + '|\033[0m' + '\n')
 
     def clear_console(self) -> None:
@@ -88,10 +91,10 @@ class TerminalUI:
             self.clear_console()
             self.display_message()
             print('Доступные задачи:')
-            print('—————————————————')
+            print('\033[33m—————————————————\033[0m')
             for i, task in enumerate(tasks, start=1):
-                print(f"\033[4m{i}\033[0m: {task.name}")
-            print('—————————————————')
+                print(f"\033[34;4m{i}\033[0m: {task.name}")
+            print('\033[33m—————————————————\033[0m')
             try:
                 task_number: int = int(input('\n\033[47m\033[30mВведите номер задачи:\033[0m '))
             except ValueError:
@@ -122,14 +125,14 @@ class TerminalUI:
             self.clear_console()
             self.display_message()
             print(f"Задача {parent_task.id}:")
-            print('—————————————————')
-            print(f"{parent_task.id}.\033[4m0\033[0m: {parent_task.name}")
-            print('—————————————————')
+            print('\033[33m—————————————————\033[0m')
+            print(f"{parent_task.id}.\033[34;4m0\033[0m: {parent_task.name}")
+            print('\033[33m—————————————————\033[0m')
             print(f"Подзадачи:")
-            print('—————————————————')
+            print('\033[33m—————————————————\033[0m')
             for i, task in enumerate(tasks, start=1):
-                print(f"{parent_task.id}.\033[4m{i}\033[0m: {task.name}")
-            print('—————————————————')
+                print(f"{parent_task.id}.\033[34;4m{i}\033[0m: {task.name}")
+            print('\033[33m—————————————————\033[0m')
             try:
                 task_number: int = int(input('\n\033[47m\033[30mВведите номер задачи:\033[0m '))
             except ValueError:
@@ -186,9 +189,9 @@ class TerminalUI:
                     if arg_count >= 0:
                         break
                     else:
-                        print('|Ошибка: Введите не отрицательное число|')
+                        self.display_message('Ошибка: Введите не отрицательное число')
                 except ValueError:
-                    print('|Ошибка: Введите натуральное число|')
+                    self.display_message('Ошибка: Введите натуральное число')
                 except KeyboardInterrupt:
                     self.back()
                     return
@@ -204,16 +207,16 @@ class TerminalUI:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
                                 if not min_limit <= len(arg_value) <= max_limit:
-                                    print(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
                                     continue
                             elif isinstance(arg_value, (int, float)):
                                 if not min_limit <= arg_value <= max_limit:
-                                    print(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
                                     continue
                         var_args += (arg_value,)
                         break
                     except ValueError:
-                        print(f'|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз|')
+                        self.display_message(f'Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз')
                     except KeyboardInterrupt:
                         self.back()
                         return
@@ -233,16 +236,16 @@ class TerminalUI:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
                                 if not min_limit <= len(arg_value) <= max_limit:
-                                    print(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
+                                    self.display_message(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
                                     continue
                             elif isinstance(arg_value, (int, float)):
                                 if not min_limit <= arg_value <= max_limit:
-                                    print(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
+                                    self.display_message(f'|Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз|')
                                     continue
                         input_args[arg] = arg_value
                         break
                     except ValueError:
-                        print(f'|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз|')
+                        self.display_message(f'|Ошибка: Не удалось преобразовать введенное значение в тип {arg_type.__name__ if arg_type else "тип не указан"}. Попробуйте еще раз|')
                     except KeyboardInterrupt:
                         self.back()
                         return
@@ -254,7 +257,7 @@ class TerminalUI:
             else:
                 result = task.function(**input_args)
         except Exception as e:
-            print(f"|Ошибка выполнения задачи {task.name}: {e}|")
+            self.display_message(f"Ошибка выполнения задачи {task.id}: {e}")
             try:
                 input("\n[Enter для закрытия задачи]")
             except KeyboardInterrupt:
