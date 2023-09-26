@@ -197,10 +197,10 @@ class TerminalUI:
             for i in range(arg_count):
                 while True:
                     try:
-                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента {argspec.varargs} ({arg_type.__name__ if arg_type else 'тип не указан'}) {i + 1}{f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges[arg] else ''}{' символов' if arg_type == 'str' else ' чисел'}:\033[0m ")
+                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента {argspec.varargs} ({arg_type.__name__ if arg_type else 'тип не указан'}) {i + 1}{f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges and task.input_ranges[arg] else ''}{' символов' if arg_type == 'str' else ' чисел' if arg_type == 'int' or 'float' else ''}:\033[0m ")
                         if arg_type:
                             arg_value = arg_type(arg_value)
-                        if task.input_ranges[arg]:
+                        if task.input_ranges and task.input_ranges[arg]:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
                                 if not min_limit < len(arg_value) < max_limit:
@@ -226,10 +226,10 @@ class TerminalUI:
                     arg_type = argspec.annotations[arg]
                 while True:
                     try:
-                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента '{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}){f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges[arg] else ''}{' символов' if arg_type == 'str' else ' чисел'}:\033[0m ")
+                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента '{arg}' ({arg_type.__name__ if arg_type else 'тип не указан'}){f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges and task.input_ranges[arg] else ''}{' символов' if arg_type == 'str' else ' чисел' if arg_type == 'int' or 'float' else ''}:\033[0m ")
                         if arg_type:
                             arg_value = arg_type(arg_value)
-                        if task.input_ranges[arg]:
+                        if task.input_ranges and task.input_ranges[arg]:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
                                 if not min_limit < len(arg_value) < max_limit:
