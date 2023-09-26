@@ -2,37 +2,50 @@ from typing import Any, Callable, Union, Optional, NoReturn
 import inspect
 import os
 import platform
-from xml.dom import ValidationErr
+import time
 try:
-    from memory_profiler import profile
+    import psutil
 except ImportError:
-    profile = None
+    psutil = None
 
+def measure_memory_time(func, *args, **kwargs) -> tuple[Any, Optional[float], Optional[float]]:
+    if not psutil:
+        result: Any = func(*args, **kwargs)
+        return result, None, None
+    start_time: float = time.time()
+    start_memory: Any = psutil.Process().memory_info().rss
+
+    result = func(*args, **kwargs)
+
+    end_time: float = time.time()
+    end_memory: Any = psutil.Process().memory_info().rss
+
+    elapsed_time: float = end_time - start_time
+    memory_diff: Any = end_memory - start_memory
+
+    return result, elapsed_time, memory_diff
+
+def format_float(number: float, precision=2) -> str:
+    number_parts: list[str] = str(number).split('.')
+    significant_zero_count: int = len(number_parts[1]) - len(number_parts[1].lstrip('0'))
+    return number_parts[0] + '.' + significant_zero_count * '0' + number_parts[1].lstrip('0')[0:precision] if number_parts[1].lstrip('0') else number_parts[0]
 class Task:
-    def __init__(self, function: Callable, input_ranges: dict[str, tuple[int, ...]], id: int, name: str, description: str) -> None:
+    def __init__(self, function: Callable, input_ranges: dict[str, tuple[int, int]], id: int, name: str, description: str) -> None:
         self.function: Callable = function
         self.id: int = id
         self.name: str = name
         self.description: str = description
         self.subtasks: list[SubTask] = []
-        self.input_ranges: dict[str, tuple[int, ...]] = input_ranges
-        # input_range validation
-        for input_range in input_ranges.values():
-            if len(input_range) > 2:
-                raise ValidationErr(input_ranges)
+        self.input_ranges: dict[str, tuple[int, int]] = input_ranges
 
 class SubTask:
-    def __init__(self, function: Callable, input_ranges: dict[str, tuple[int, ...]], parent_id: int, id: int, name: str, description: str) -> None:
+    def __init__(self, function: Callable, input_ranges: dict[str, tuple[int, int]], parent_id: int, id: int, name: str, description: str) -> None:
         self.parent_id: int = parent_id
         self.function: Callable = function
         self.id: int = id
         self.name: str = name
         self.description: str = description
-        self.input_ranges: dict[str, tuple[int, ...]] = input_ranges
-        # input_range validation
-        for input_range in input_ranges.values():
-            if len(input_range) > 2:
-                raise ValidationErr(input_ranges)
+        self.input_ranges: dict[str, tuple[int, int]] = input_ranges
 
 class TaskManager:
     def __init__(self, ui) -> None:
@@ -40,12 +53,12 @@ class TaskManager:
         self.ui: TerminalUI = ui
         self.last_used_id: int = 0
 
-    def add_task(self, function: Callable, input_ranges: dict[str, tuple[int, ...]], name: str, description: str) -> None:
+    def add_task(self, function: Callable, input_ranges: dict[str, tuple[int, int]], name: str, description: str) -> None:
         self.last_used_id += 1
         task = Task(function, input_ranges, self.last_used_id, name, description)
         self.tasks.append(task)
 
-    def add_subtask(self, function: Callable, input_ranges: dict[str, tuple[int, ...]], parent_id: int, name: str, description: str) -> None:
+    def add_subtask(self, function: Callable, input_ranges: dict[str, tuple[int, int]], parent_id: int, name: str, description: str) -> None:
         parent_task: Task = self.tasks[parent_id - 1]
         subtask_id: int = len(parent_task.subtasks) + 2
         subtask = SubTask(function, input_ranges, parent_id, subtask_id, name, description)
@@ -267,11 +280,13 @@ class TerminalUI:
             try:
                 input("\n[Enter для закрытия задачи]")
             except KeyboardInterrupt:
+                self.back()
                 return
         try:
             print(f"\033[37;42mРезультат ({argspec.annotations['return'].__name__ if argspec.annotations['return'] else 'тип не указан'}):\033[0m {result}")
             input("\n[Enter для закрытия задачи]")
         except KeyboardInterrupt:
+            self.back()
             return
 
         self.current_subtask = None
@@ -289,7 +304,7 @@ def main() -> NoReturn:
     # Добавление задач в менеджер
     manager.add_task(task1, {}, 'Обмен значениями переменных', 'Составьте программу обмена значениями трех переменных a, b, и c, так чтобы b получила значение c, c получила значение a, а a получила значение b.')
     manager.add_task(task2_1, {}, 'Проверка ввода двух чисел и их сумма', 'Пользователь вводит два числа. Проверьте, что введенные данные - это числа. Если нет, выведите ошибку. Если да, то выведите их сумму.')
-    manager.add_subtask(task2_2, {}, 2, 'Проверка ввода n чисел и их сумма', 'Доработайте задачу 2.0 так, чтобы пользователь мог вводить n разных чисел, а затем выведите их сумму. Предоставьте возможность пользователю ввести значение n.')
+    manager.add_subtask(task2_2, {}, 2, 'Проверка ввода n чисел и их сумма', 'Доработайте задачу 2.1 так, чтобы пользователь мог вводить n разных чисел, а затем выведите их сумму. Предоставьте возможность пользователю ввести значение n.')
     manager.add_task(task3_1, {'x': (0, 100)},'Возведение в 5 степень', 'Дано число x в диапазоне от 0 до 100. Вычислите x в 5-ой степени.')
     manager.add_subtask(task3_2, {'x': (0, 100)}, 3, 'Возведение в 5 степень с помощью умножения', 'Измените задачу 3.1 так, чтобы для вычисления степени использовалось только умножение.')
 
@@ -311,7 +326,7 @@ def task1(a: int, b: int, c: int) -> str:
     a, b, c = b, c, a
     return f"a = {a}, b = {b}, c = {c}"
 
-def task2_1(number1, number2) -> Optional[int]:
+def task2_1(number1, number2) -> int | None:
     try:
         summ: int = int(number1) + int(number2)
         print('Все введённые значения — числа')
@@ -319,7 +334,7 @@ def task2_1(number1, number2) -> Optional[int]:
     except ValueError:
         print('Одно или несколько введённых значений — не числа')
 
-def task2_2(*numbers) -> Optional[int | float]:
+def task2_2(*numbers) -> int | float | None:
     summ: int | float = 0
     for number in numbers:
         try:
@@ -333,11 +348,17 @@ def task2_2(*numbers) -> Optional[int | float]:
     print('Все введённые значения — числа')
     return summ
 
-def task3_1(x: int) -> int:
-    return x**5
+def task3_1(x: int) -> str:
+    def power_of_five(x: int) -> int:
+        return x**5
+    result, elapsed_time, memory_diff = measure_memory_time(power_of_five, x)
+    return f"x^5: {result}, время: {format_float(elapsed_time) if elapsed_time else elapsed_time} секунд, память: {format_float(memory_diff, 5) if memory_diff else memory_diff} байт"
 
-def task3_2(x: int) -> int:
-    return x*x*x*x*x
+def task3_2(x: int) -> str:
+    def power_of_five(x: int) -> int:
+        return x*x*x*x*x
+    result, elapsed_time, memory_diff = measure_memory_time(power_of_five, x)
+    return f"x^5: {result}, время: {format_float(elapsed_time) if elapsed_time else elapsed_time} секунд, память: {format_float(memory_diff, 5) if memory_diff else memory_diff} байт"
 
 if __name__ == '__main__':
     main()
