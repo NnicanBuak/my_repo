@@ -120,7 +120,7 @@ class TerminalUI:
         tasks: list[SubTask] = parent_task.subtasks
         self.previous_menu = 'tasks'
         self.current_menu = 'subtasks'
-        self.set_message('Ctrl+C/Del для закрытия приложения')
+        self.set_message('Ctrl+C/Del для возвращения в предыдущее меню')
         while True:
             self.clear_console()
             self.display_message()
