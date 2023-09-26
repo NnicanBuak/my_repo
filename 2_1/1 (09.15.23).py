@@ -248,11 +248,23 @@ class TerminalUI:
                         if task.input_ranges and task.input_ranges[arg]:
                             min_limit, max_limit = task.input_ranges[arg]
                             if isinstance(arg_value, str):
-                                if not min_limit <= len(arg_value) <= max_limit:
+                                if min_limit and max_limit and not min_limit <= len(arg_value) <= max_limit:
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    continue
+                                elif min_limit and not min_limit <= len(arg_value):
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    continue
+                                elif max_limit and not len(arg_value) <= max_limit:
                                     self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
                                     continue
                             elif isinstance(arg_value, (int, float)):
-                                if not min_limit <= arg_value <= max_limit:
+                                if min_limit and max_limit and not min_limit <= arg_value <= max_limit:
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    continue
+                                elif min_limit and not min_limit <= arg_value:
+                                    self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
+                                    continue
+                                elif max_limit and not arg_value <= max_limit:
                                     self.display_message(f'Ошибка: Значение не входит в заданный диапазон {task.input_ranges[arg]}. Попробуйте еще раз')
                                     continue
                         input_args[arg] = arg_value
@@ -328,7 +340,7 @@ def main() -> NoReturn:
     manager.add_task(task4_1, {'number': (0, 250)},'Проверка числа на соответствие Числу Фибоначчи', 'Пользователь может вводить число от 0 до 250. Проверьте, принадлежит ли введенное число числам Фибоначчи.')
     manager.add_task(task5_1, {},'Получение времени года по месяцу (1 способ)', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
     manager.add_subtask(task5_2, {}, 5, 'Получение времени года по месяцу (2 способ)', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
-    manager.add_task(task6_1, {'N': (1,)},'Получение с', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
+    manager.add_task(task6_1, {'N': (1, None)},'Получение с', 'Реализуйте программу двумя способами на определение времени года в зависимости от введенного месяца года.')
 
     # Основной цикл
     while True:
