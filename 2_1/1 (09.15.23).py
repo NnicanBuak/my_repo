@@ -243,7 +243,7 @@ class TerminalUI:
                     print(arg_type)
                 while True:
                     try:
-                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента '{arg}' ({arg_type.__name__ if arg_type and arg_type.__name__ != 'list' and arg_type.__name__ != 'tuple'  and arg_type.__name__ != 'dict' else arg_type if arg_type else 'тип не указан'})({'пример ввода: "1,2,3"' if arg_type.__name__ == 'list' else ''})({'пример ввода: 123' if arg_type.__name__ == 'dict' else ''}){f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges and task.input_ranges[arg] else ''}{' символов' if arg_type.__name__ == 'str' else ''}:\033[0m ")
+                        arg_value: Any = input(f"\033[47m\033[30mВведите значение аргумента '{arg}' ({arg_type.__name__ if arg_type and arg_type.__name__ != 'list' and arg_type.__name__ != 'tuple'  and arg_type.__name__ != 'dict' else arg_type if arg_type else 'тип не указан'})({'пример ввода: 1,2,3' if arg_type.__name__ == 'list' else ''})({'пример ввода: 123' if arg_type.__name__ == 'dict' else ''}){f' в диапазоне {task.input_ranges[arg]}' if task.input_ranges and task.input_ranges[arg] else ''}{' символов' if arg_type.__name__ == 'str' else ''}:\033[0m ")
                         if arg_type:
                             arg_value = arg_type(arg_value)
                         if task.input_ranges and task.input_ranges[arg]:
