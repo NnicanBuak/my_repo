@@ -574,9 +574,9 @@ def task_14_2() -> None:
         currency: str = var.get()
         try:
             if currency == "RUB":
-                result: float = float(amount) / exchange_rate
-            else:
                 result = float(amount) * exchange_rate
+            else:
+                result: float = float(amount) / exchange_rate
             result_label.config(text=f"{result:.2f} {currency}")
         except ValueError:
             messagebox.showerror("Ошибка", "Введите корректное число")
