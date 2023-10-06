@@ -4,6 +4,8 @@ except ImportError:
     psutil = None
 import time
 from typing import Any, Optional
+
+
 def measure(func, *args, **kwargs) -> tuple[Any, Optional[float], Optional[float]]:
     if not psutil:
         result: Any = func(*args, **kwargs)

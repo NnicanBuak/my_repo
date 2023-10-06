@@ -1,7 +1,53 @@
+import random
+import tkinter as tk
+from tkinter import messagebox
 from typing import Any, Callable, Union, Optional, NoReturn
 import inspect
 import os
 import platform
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
+import time
+
+class superformat:
+    @staticmethod
+    def float(number: float, precision=2) -> str:
+        number_parts: list[str] = str(number).split('.')
+        if len(number_parts) == 2:
+            return number_parts[0] + '.' + number_parts[1][:-(len(number_parts[1].lstrip('0'))-precision) if len(number_parts[1].lstrip('0'))-precision > 0 else 0] if number_parts[1].lstrip('0') else number_parts[0]
+        else:
+            return number_parts[0]
+
+class measure:
+    @staticmethod
+    def measure(func, *args, **kwargs) -> tuple[Any, Optional[float], Optional[float]]:
+        if not psutil:
+            result: Any = func(*args, **kwargs)
+            return result, None, None
+        start_time: float = time.time()
+        start_memory: Any = psutil.Process().memory_info().rss
+
+        result = func(*args, **kwargs)
+
+        end_time: float = time.time()
+        end_memory: Any = psutil.Process().memory_info().rss
+
+        elapsed_time: float = end_time - start_time
+        memory_diff: Any = end_memory - start_memory
+
+        return result, elapsed_time, memory_diff
+
+class terminal:
+    @staticmethod
+    def clear() -> None:
+        system: str = platform.system()
+        if system == 'Windows':
+            os.system('cls')
+        else:
+            os.system('clear')
 
 class Task:
     def __init__(self, function: Callable, input_ranges: dict[str, tuple[Optional[int], Optional[int]]], id: int, name: str, description: str, comment: str) -> None:
@@ -399,7 +445,7 @@ def main() -> NoReturn:
     category1.add_task(task_15_1, {'N': (5, 20), 'M': (5, 20)}, 'Таблица умножения', 'Реализуйте вывод таблицы умножения в консоль размером N на M которые вводит пользователь, но при этом они не могут быть больше 20 и меньше 5.')
     category1.add_task(task_16_1, {}, 'Морской бой', 'Реализуйте вывод в консоль поле для морского боя с выставленными кораблями. Данные о кораблях, можно подгружать из файла или генерировать самостоятельно.')
 
-    category2.add_task(tamagochi, {}, 'Аксомагочи', 'Зверушка должна иметь две шкалы (сытость и радость) и два метода (накормить и поиграть). С течением времени (длина такт от 1 до 10 секунд на ваш выбор) зверушка становится грустнее и голоднее. При опустошении одной из шкал игра заканчивается. Действие поиграть отнимает очки из шкалы сытости. Красивое оформление позволяет получить до 1.5 баллов дополнительно, но не является обязательным, достаточно текстового интерфейса. Программа должна быть дружелюбной и понятной.', '>~<')
+    # category2.add_task(tamagochi, {}, 'Аксомагочи', 'Зверушка должна иметь две шкалы (сытость и радость) и два метода (накормить и поиграть). С течением времени (длина такт от 1 до 10 секунд на ваш выбор) зверушка становится грустнее и голоднее. При опустошении одной из шкал игра заканчивается. Действие поиграть отнимает очки из шкалы сытости. Красивое оформление позволяет получить до 1.5 баллов дополнительно, но не является обязательным, достаточно текстового интерфейса. Программа должна быть дружелюбной и понятной.', '>~<')
 
     # Основной цикл
     manager_of_category = None
@@ -419,4 +465,229 @@ def main() -> NoReturn:
             ui.task_menu(task)
 
 if __name__ == '__main__':
+    # Объявлкение задач
+    def task_1_1(a: int, b: int, c: int) -> str:
+        a, b, c = b, c, a
+        return f"a = {a}, b = {b}, c = {c}"
+    def task_2_1(number1, number2) -> str:
+        try:
+            summ: int = int(number1) + int(number2)
+            return f"Все введёные значения — числа, их сумма: {summ}"
+        except ValueError:
+            return 'Одно или несколько введённых значений — не числа'
+    def task_2_2(*numbers) -> str:
+        summ: int | float = 0
+        for number in numbers:
+            try:
+                summ += int(number)
+            except:
+                try:
+                    summ += float(number)
+                except:
+                    return 'Одно или несколько введённых значений — не числа'
+        return f"Все введёные значения — числа, их сумма: {summ}"
+    def task_3_1(x: int) -> str:
+        def power_of_five(x: int) -> int:
+            return x**5
+        result, time, memory = measure.measure(power_of_five, x)
+        return f"x^5: {result}, время: {superformat.float(time, 5) if time != None else time} секунд, память: {superformat.float(memory, 5) if memory != None else memory} байт"
+
+    def task_3_2(x: int) -> str:
+        def power_of_five(x: int) -> int:
+            return x*x*x*x*x
+        result, time, memory = measure.measure(power_of_five, x)
+        return f"x^5: {result}, время: {superformat.float(time, 5) if time != None else time} секунд, память: {superformat.float(memory, 5) if memory != None else memory} байт"
+    def task_4_1(number: int) -> str:
+        def get_fibonacci(n: int) -> int:
+            if n == 0 or 1:
+                return n
+            else:
+                return get_fibonacci(n-1) + get_fibonacci(n-2)
+        for n in range(0, 13):
+            if number == get_fibonacci(n):
+                return f"{number} — Число Фибоначчи!"
+        return f"{number} — не Число Фибоначчи"
+    def task_5_1(month: int) -> str:
+        if month in [12, 1, 2]:
+            return 'Зима'
+        elif month in [3, 4, 5]:
+            return 'Весна'
+        elif month in [6, 7, 8]:
+            return 'Лето'
+        elif month in [9, 10, 11]:
+            return 'Осень'
+        else:
+            return 'В 1 году — 12 месяцев. Время года не определенно'
+
+    def task_5_2(month: int) -> str:
+        seasons: dict[int, str] = {1: 'Зима', 2: 'Зима', 3: 'Весна', 4: 'Весна', 5: 'Весна',
+                6: 'Лето', 7: 'Лето', 8: 'Лето', 9: 'Осень', 10: 'Осень',
+                11: 'Осень', 12: 'Зима'}
+        return seasons.get(month, 'В 1 году — 12 месяцев. Время года не определенно')
+    def task_6_1(N: int) -> str:
+        even_count: int = N // 2
+        odd_count: int = N - even_count
+        return f"сумма: {sum(range(1, N + 1))}, кол-во чётных: {even_count}, кол-во нечётных: {odd_count}"
+    def task_7_1(N: int) -> dict[int, int]:
+        result: dict[int, int] = {}
+        for number in range(1, N + 1):
+            result[number] = len([i for i in range(1, number + 1) if number % i == 0])
+        return result
+    def task_8_1(N: int, M: int) -> list[tuple[int, int, int]]:
+        pythagorean_triples: list[tuple[int, int, int]] = []
+        for a in range(N, M+1):
+            for b in range(a, M+1):
+                c = (a**2 + b**2)**0.5
+                if c.is_integer() and c <= M:
+                    pythagorean_triples.append((a, b, int(c)))
+        return pythagorean_triples
+    def task_9_1(N: int, M: int) -> list[int]:
+        numbers: list[int] = []
+        for number in range(N, M+1):
+            digits: list[int] = [int(digit) for digit in str(number) if int(digit) != 0]
+            if all(number % digit == 0 for digit in digits):
+                numbers.append(number)
+        return numbers
+    def task_10_1(N: int) -> list[int]:
+        perfect_numbers: list[int] = []
+        i = 1
+        while len(perfect_numbers) < N:
+            if sum(divisor for divisor in range(1, i//2 + 1) if i % divisor == 0) == i:
+                perfect_numbers.append(i)
+            i += 1
+        return perfect_numbers
+    def task_11_1(array: list[int]) -> str:
+        def last_element_1() -> int:
+            return array[-1]
+        def last_element_2() -> int:
+            return array[len(array)-1]
+        def last_element_3() -> int:
+            return next(reversed(array))
+        result1, time1, memory1 = measure.measure(last_element_1)
+        result2, time2, memory2 = measure.measure(last_element_2)
+        result3, time3, memory3 = measure.measure(last_element_3)
+        return f"последний элемент: {result1 or result2 or result3}, время способа 1: {superformat.float(time1, 5) if time1 else time1}, время способа 2: {superformat.float(time2, 5) if time2 else time2}, время способа 3: {superformat.float(time3, 5) if time3 else time3}"
+    def task_12_1(array: list[int]) -> list[int]:
+        return array[::-1]
+    def task_13_1(array: list[int]) -> int:
+        if len(array) == 0:
+            return 0
+        else:
+            return array[0] + task_13_1(array[1:])
+    def task_14_1() -> None:
+        def convert_to_usd() -> None:
+            rub: str = rub_entry.get()
+            try:
+                usd: float = float(rub) / exchange_rate
+                result_label.config(text=f"{usd:.2f} USD")
+            except ValueError:
+                messagebox.showerror("Ошибка", "Введите корректное число")
+
+        window = tk.Tk()
+        window.title("Конвертер валют: RUB в USD")
+
+        exchange_rate = 97.0
+
+        rub_label = tk.Label(window, text="RUB:")
+        rub_label.pack()
+
+        rub_entry = tk.Entry(window)
+        rub_entry.pack()
+
+        convert_button = tk.Button(window, text="Конвертировать", command=convert_to_usd)
+        convert_button.pack()
+
+        result_label = tk.Label(window, text="")
+        result_label.pack()
+
+        window.mainloop()
+
+    def task_14_2() -> None:
+        def convert_currency() -> None:
+            amount: str = amount_entry.get()
+            currency: str = var.get()
+            try:
+                if currency == "RUB":
+                    result = float(amount) * exchange_rate
+                else:
+                    result: float = float(amount) / exchange_rate
+                result_label.config(text=f"{result:.2f} {currency}")
+            except ValueError:
+                messagebox.showerror("Ошибка", "Введите корректное число")
+
+        window = tk.Tk()
+        window.title("Конвертер валют: RUB и USD")
+
+        exchange_rate = 97.0
+
+        amount_label = tk.Label(window, text="Сумма:")
+        amount_label.pack()
+
+        amount_entry = tk.Entry(window)
+        amount_entry.pack()
+
+        var = tk.StringVar(value="RUB")
+
+        rub_to_usd_radio = tk.Radiobutton(window, text="RUB в USD", variable=var, value="USD")
+        rub_to_usd_radio.pack()
+
+        usd_to_rub_radio = tk.Radiobutton(window, text="USD в RUB", variable=var, value="RUB")
+        usd_to_rub_radio.pack()
+
+        convert_button = tk.Button(window, text="Конвертировать", command=convert_currency)
+        convert_button.pack()
+
+        result_label = tk.Label(window, text="")
+        result_label.pack()
+
+        window.mainloop()
+    def task_15_1(N: int, M: int) -> list[str]:
+        result: list[str] = []
+        for i in range(1, N+1):
+            for j in range(1, M+1):
+                result.append(f"{i} * {j} = {i*j}")
+        return result
+    def task_16_1() -> list[list[str]]:
+        board: list[list[str]] = []
+        for i in range(0, 10):
+            board.append(["🟦"] * 10)
+
+        def can_place_ship(board, ship_length, start_row, start_col, orientation) -> bool:
+            if orientation == 'horizontal':
+                if start_col + ship_length > len(board[0]):
+                    return False
+                for i in range(max(0, start_col - 1), min(len(board[0]), start_col + ship_length + 2)):
+                    for j in range(max(0, start_row - 1), min(len(board), start_row + 2)):
+                        if board[j][i] == '⬜':
+                            return False
+            else:
+                if start_row + ship_length > len(board):
+                    return False
+                for i in range(max(0, start_col - 1), min(len(board[0]), start_col + 2)):
+                    for j in range(max(0, start_row - 1), min(len(board), start_row + ship_length + 2)):
+                        if board[j][i] == '⬜':
+                            return False
+            return True
+
+        def place_ship(board, ship_length) -> None:
+            while True:
+                orientation: str = random.choice(['horizontal', 'vertical'])
+                if orientation == 'horizontal':
+                    start_row: int = random.randint(0, len(board) - 1)
+                    start_col: int = random.randint(0, len(board[0]) - ship_length)
+                    if can_place_ship(board, ship_length, start_row, start_col, orientation):
+                        for i in range(ship_length):
+                            board[start_row][start_col + i] = '⬜'
+                        break
+                else:
+                    start_row = random.randint(0, len(board) - ship_length)
+                    start_col = random.randint(0, len(board[0]) - 1)
+                    if can_place_ship(board, ship_length, start_row, start_col, orientation):
+                        for i in range(ship_length):
+                            board[start_row + i][start_col] = '⬜'
+                        break
+
+        for ship_length in [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]:
+            place_ship(board, ship_length)
+        return board
     main()
