@@ -1,8 +1,0 @@
-{
-	"python.analysis.typeCheckingMode": "basic",
-	"python.analysis.extraPaths": [
-		"./2_1/tasks",
-		"./modules",
-		"./2_1"
-	]
-}
