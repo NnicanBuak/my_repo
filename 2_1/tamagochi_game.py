@@ -1,11 +1,19 @@
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from modules import terminal
+import os
+import platform
 import time
 import random
 import threading
 import keyboard
+
+class terminal:
+    @staticmethod
+    def clear() -> None:
+      system: str = platform.system()
+      if system == 'Windows':
+          os.system('cls')
+      else:
+          os.system('clear')
+
 
 MAX_FULLNESS = 200
 MAX_FUN = 200
