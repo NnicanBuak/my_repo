@@ -144,13 +144,13 @@ feed cooldown: {self.feed_cooldown}; play cooldown: {self.play_cooldown}
             self.__art = "    ≽(._.)≼\n      ( )_"
 
         if 25 <= self.fullness < 75 and self.fun > 100:
-            self.__art = "    ≽(*v*)≼\n      ( )_"
+            self.__art = "    ≽(*v*)≼\n      (~)_"
         elif 25 <= self.fullness < 75 and 75 <= self.fun < 100:
-            self.__art = "    ≽(^⏝​^)≼\n      ( )_"
+            self.__art = "    ≽(^⏝​^)≼\n      (~)_"
         elif 25 <= self.fullness < 75 and 25 <= self.fun < 75:
-            self.__art = "    ≽(^_^)≼\n      ( )_"
+            self.__art = "    ≽(^_^)≼\n      (~)_"
         elif 25 <= self.fullness < 75 and 0 < self.fun < 25:
-            self.__art = "    ≽(._.)≼\n      ( )_"
+            self.__art = "    ≽(._.)≼\n      (~)_"
 
         if 0 < self.fullness < 25 and self.fun > 100:
             self.__art = "    ≽(*v*)≼\n      (≋)_"
@@ -163,12 +163,12 @@ feed cooldown: {self.feed_cooldown}; play cooldown: {self.play_cooldown}
 
 
         elif self.fullness > 120 or self.fun > 120:
-            state_thread = threading.Thread(target=self.handle_overindulgence)
+            state_thread = threading.Thread(target=self.handle_overstat)
             state_thread.start()
             # Пооток состояния
             state_thread.join()
 
-    def handle_overindulgence(self) -> None:
+    def handle_overstat(self) -> None:
         while self.fullness > FULLNESS_OVERSATURATION_LIMIT or self.fun > FUN_OVERINDULGENCE_LIMIT and not self.stop_event.is_set():
             time.sleep(30)
             if self.fullness > 120:
@@ -197,10 +197,10 @@ feed cooldown: {self.feed_cooldown}; play cooldown: {self.play_cooldown}
             time.sleep(1)
             if self.__feed_cooldown > 0:
                 self.__feed_cooldown -= 1
+                self.display()
             if self.__play_cooldown > 0:
                 self.__play_cooldown -= 1
-
-            self.display()
+                self.display()
 
 
 class Game:
