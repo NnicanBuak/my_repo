@@ -1,4 +1,5 @@
 from typing import Any, Literal, Tuple
+import itertools
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 import numpy as np
@@ -18,11 +19,33 @@ class Point:
 
 
 class Triangle:
-    def __init__(self, points: Tuple[Point, Point, Point]) -> None:
-        self.list: Tuple[Point, Point, Point] = points
+    def __init__(self, id: str, point1: Point, point2: Point, point3: Point) -> None:
+        self.id: str = id
+        self.point1: Point = point1
+        self.point2: Point = point2
+        self.point3: Point = point3
+
+    @property
+    def points(self) -> Tuple[Point, Point, Point]:
+        return (self.point1, self.point2, self.point3)
+
+    @property
+    def area(self) -> float:
+        return 0.5 * abs(
+            (
+                self.point1.x * (self.point2.y - self.point3.y)
+                + self.point2.x * (self.point3.y - self.point1.y)
+                + self.point3.x * (self.point1.y - self.point2.y)
+            )
+        )
 
 
-class PointsScatter:
+class TriangleDraw:
+    def __init__(self) -> None:
+        pass
+
+
+class PointsDraw:
     def __init__(
         self,
         axes,
@@ -127,12 +150,12 @@ if __name__ == "__main__":
     axes.set_xlabel("Ось X")
     axes.set_ylabel("Ось Y")
 
-    points = PointsScatter(axes, 10)
+    points = PointsDraw(axes, scale=10)
 
     data_path: str = "./2_1/data/plist.txt"
-    data_path_input: str = input("Введите путь к файлу с координатами точек: ")
-    if data_path_input:
-        data_path = data_path_input
+    # data_path_input: str = input("Введите путь к файлу с координатами точек: ")
+    # if data_path_input:
+    #     data_path = data_path_input
     with open(data_path) as pointlist:
         # "[0, 1][2, 5][3, 0]"" ...
         splitted_pointlist: list[str] = pointlist.read().strip("[]").split("][")
