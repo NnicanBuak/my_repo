@@ -115,7 +115,7 @@ class PointsScatter:
 
         for point in self.list:
             distance = np.sqrt((point.x - x) ** 2 + (point.y - y) ** 2)
-            if distance <= self.scale*0.05:
+            if distance <= self.scale * 0.05:
                 return point
         return None
 
@@ -129,12 +129,17 @@ if __name__ == "__main__":
 
     points = PointsScatter(axes, 10)
 
-    with open("plist.txt") as pointlist:
+    data_path: str = "./2_1/data/plist.txt"
+    data_path_input: str = input("Введите путь к файлу с координатами точек: ")
+    if data_path_input:
+        data_path = data_path_input
+    with open(data_path) as pointlist:
         # "[0, 1][2, 5][3, 0]"" ...
         splitted_pointlist: list[str] = pointlist.read().strip("[]").split("][")
         for splitted_point in splitted_pointlist:
             points.add_point(
                 int(splitted_point.split(",")[0]), int(splitted_point.split(",")[1])
             )
+
     points.adjust_axis_limits()
     plt.show()
