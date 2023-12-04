@@ -40,7 +40,7 @@ class Triangle:
         )
 
 
-class TriangleDraw:
+class TrianglesDraw:
     def __init__(self) -> None:
         pass
 
