@@ -1,7 +1,7 @@
 import unittest
 
-from points import Point
-from triangles import Triangle
+from pycoordsplain.points import Point
+from pycoordsplain.triangles import Triangle
 
 class TriangleTestCase(unittest.TestCase):
     def testTriangleArea1(self):
