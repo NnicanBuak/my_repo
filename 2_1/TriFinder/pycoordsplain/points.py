@@ -47,7 +47,7 @@ class PointsDraw:
         self.axes.figure.canvas.mpl_connect("motion_notify_event", self.on_hover)
         self.axes.figure.canvas.mpl_connect("axes_leave_event", self.on_leave)
 
-    def add_point(self, x, y):
+    def add_point(self, x, y) -> None:
         point = Point(self.pointCount, x, y)
         self.pointCount += 1
         self.list.append(point)
@@ -59,7 +59,7 @@ class PointsDraw:
         self.adjust_axis_limits()
         self.axes.figure.canvas.draw_idle()
 
-    def adjust_axis_limits(self):
+    def adjust_axis_limits(self) -> None:
         if not self.list:
             return
 
@@ -72,7 +72,17 @@ class PointsDraw:
         self.axes.set_xlim(x_min - buffer, x_max + buffer)
         self.axes.set_ylim(y_min - buffer, y_max + buffer)
 
-    def on_hover(self, event):
+    def on_point(self, x, y) -> Point | None:
+        if not self.list:
+            return None
+
+        for point in self.list:
+            distance = np.sqrt((point.x - x) ** 2 + (point.y - y) ** 2)
+            if distance <= self.scale * 0.05:
+                return point
+        return None
+
+    def on_hover(self, event) -> None:
         if (
             event.inaxes is not None
             and event.xdata is not None
@@ -87,7 +97,7 @@ class PointsDraw:
                 self.annotation.set_visible(False)
                 self.axes.figure.canvas.draw_idle()
 
-    def on_leave(self, event):
+    def on_leave(self, event) -> None:
         self.annotation.set_visible(False)
         self.axes.figure.canvas.draw_idle()
 
@@ -96,13 +106,3 @@ class PointsDraw:
         self.annotation.xy = (x, y)
         self.annotation.set_text(f"Точка {point.number}: [{x:.0f}, {y:.0f}]")
         self.axes.figure.canvas.draw_idle()
-
-    def on_point(self, x, y):
-        if not self.list:
-            return None
-
-        for point in self.list:
-            distance = np.sqrt((point.x - x) ** 2 + (point.y - y) ** 2)
-            if distance <= self.scale * 0.05:
-                return point
-        return None
