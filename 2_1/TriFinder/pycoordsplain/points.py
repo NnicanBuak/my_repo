@@ -32,7 +32,7 @@ class PointsDraw:
         self.axes = axes
         self.scale: int = scale
         self.list: list[Point] = []
-        self.scatter = self.axes.scatter([], [], s=scale, c=colors[color])
+        self.draw = self.axes.scatter([], [], s=scale, c=colors[color])
 
         self.annotation = self.axes.annotate(
             "",
@@ -51,11 +51,12 @@ class PointsDraw:
         point = Point(self.pointCount, x, y)
         self.pointCount += 1
         self.list.append(point)
-        self.update_scatter()
+        self.update_draw()
 
-    def update_scatter(self):
+    def update_draw(self):
         coords: list[tuple[int, int]] = [(point.x, point.y) for point in self.list]
-        self.scatter.set_offsets(coords)
+        self.draw.set_offsets(coords)
+        self.adjust_axis_limits()
         self.axes.figure.canvas.draw_idle()
 
     def adjust_axis_limits(self):
