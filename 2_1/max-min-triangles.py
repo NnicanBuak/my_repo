@@ -1,6 +1,5 @@
 from typing import Any, Literal, Tuple
 from itertools import permutations
-from keyboard import on_press
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 from matplotlib.tri import Triangulation
@@ -42,7 +41,7 @@ class Triangle:
         )
 
 
-class TriangleDraw:
+class TrianglesDraw:
     def __init__(self) -> None:
         pass
 
@@ -172,33 +171,32 @@ def find_min_max_triangle(points):
     return min_triangle, max_triangle
 
 
-if __name__ == "__main__":
-    figure, axes = plt.subplots()
-    figure.suptitle("Задача: Поиск max и min треугольников между заданными точками")
-    axes.set_title("Координатная плоскость")
-    axes.set_xlabel("Ось X")
-    axes.set_ylabel("Ось Y")
-    button_ax = plt.axes((0.5 - 0.05, 0.909, 0.1, 0.05))  # left, bottom, width, height
-    button = Button(button_ax, "Поиск")
+figure, axes = plt.subplots()
+figure.suptitle("Задача: Поиск max и min треугольников между заданными точками")
+axes.set_title("Координатная плоскость")
+axes.set_xlabel("Ось X")
+axes.set_ylabel("Ось Y")
+button_ax = plt.axes((0.5 - 0.05, 0.909, 0.1, 0.05))  # left, bottom, width, height
+button = Button(button_ax, "Поиск")
 
-    points = PointsDraw(axes, scale=10)
+points = PointsDraw(axes, scale=10)
 
-    data_path: str = "./2_1/data/plist.txt"
-    # data_path_input: str = input("Введите путь к файлу с координатами точек: ")
-    # if data_path_input:
-    #     data_path = data_path_input
-    with open(data_path) as pointlist:
-        # "[0, 1][2, 5][3, 0]"" ...
-        splitted_pointlist: list[str] = pointlist.read().strip("[]").split("][")
-        for splitted_point in splitted_pointlist:
-            points.add_point(
-                int(splitted_point.split(",")[0]), int(splitted_point.split(",")[1])
-            )
+data_path: str = input("Введите путь к файлу с координатами точек: ")
+with open(data_path) as pointlist:
+    # "[0, 1][2, 5][3, 0]"" ...
+    splitted_pointlist: list[str] = pointlist.read().strip("[]").split("][")
+    for splitted_point in splitted_pointlist:
+        points.add_point(
+            int(splitted_point.split(",")[0]), int(splitted_point.split(",")[1])
+        )
 
-    def find_triangles_event(event):
-        min_triangle, max_triangle = find_min_max_triangle(points.list)
-        print([(point.x, point.y) for point in min_triangle.points], [(point.x, point.y) for point in max_triangle.points])
+def find_triangles_event(event):
+    min_triangle, max_triangle = find_min_max_triangle(points.list)
+    print(
+        [(point.x, point.y) for point in min_triangle.points],
+        [(point.x, point.y) for point in max_triangle.points],
+    )
 
-    button.on_clicked(find_triangles_event)
-    points.adjust_axis_limits()
-    plt.show()
+button.on_clicked(find_triangles_event)
+points.adjust_axis_limits()
+plt.show()
