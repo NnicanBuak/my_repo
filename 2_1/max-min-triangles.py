@@ -1,6 +1,8 @@
 from typing import Any, Literal, Tuple
-import itertools
+from itertools import permutations
+from keyboard import on_press
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
 from matplotlib.tri import Triangulation
 import numpy as np
 
@@ -143,12 +145,41 @@ class PointsDraw:
         return None
 
 
+def distance_squared(point1, point2):
+    return (point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2
+
+
+def find_min_max_triangle(points):
+    min_triangle = Triangle(
+        "min", Point(0, x=0, y=0), Point(0, x=0, y=0), Point(0, x=0, y=0)
+    )
+    max_triangle = Triangle(
+        "max", Point(0, x=0, y=0), Point(0, x=0, y=0), Point(0, x=0, y=0)
+    )
+    min_area: float = float("inf")
+    max_area: float = 0.0
+
+    for combo in permutations(points, 3):
+        current_triangle = Triangle("min", *combo)
+        area: float = current_triangle.area
+        if area < min_area:
+            min_area = area
+            min_triangle: Triangle = current_triangle
+        if area > max_area:
+            max_area = area
+            max_triangle: Triangle = current_triangle
+
+    return min_triangle, max_triangle
+
+
 if __name__ == "__main__":
     figure, axes = plt.subplots()
     figure.suptitle("Задача: Поиск max и min треугольников между заданными точками")
     axes.set_title("Координатная плоскость")
     axes.set_xlabel("Ось X")
     axes.set_ylabel("Ось Y")
+    button_ax = plt.axes((0.5 - 0.05, 0.909, 0.1, 0.05))  # left, bottom, width, height
+    button = Button(button_ax, "Поиск")
 
     points = PointsDraw(axes, scale=10)
 
@@ -164,5 +195,10 @@ if __name__ == "__main__":
                 int(splitted_point.split(",")[0]), int(splitted_point.split(",")[1])
             )
 
+    def find_triangles_event(event):
+        min_triangle, max_triangle = find_min_max_triangle(points.list)
+        print([(point.x, point.y) for point in min_triangle.points], [(point.x, point.y) for point in max_triangle.points])
+
+    button.on_clicked(find_triangles_event)
     points.adjust_axis_limits()
     plt.show()
