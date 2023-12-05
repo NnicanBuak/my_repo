@@ -13,7 +13,7 @@ from matplotlib.tri import Triangulation
 import re
 
 
-def read_pointslist_from_file(file_path: str) -> str | None:
+def read_pointlist_from_file(file_path: str) -> str | None:
     try:
         with open(file_path) as pointlist:
             points.list = []
@@ -39,16 +39,16 @@ def on_findbutton_clicked(event) -> None:
 
 
 def on_pointlistpath_submit(event) -> None:
-    global pointslist_input_buffer
-    exception = read_pointslist_from_file(event)
+    global pointlist_input_buffer
+    exception = read_pointlist_from_file(event)
     if exception:
         inputresponse_text.set_color("r")
         inputresponse_text.set_text(exception)
-        pointslist_input.set_val(pointslist_input_buffer)
-    elif event != pointslist_input_buffer:
+        pointlist_input.set_val(pointlist_input_buffer)
+    elif event != pointlist_input_buffer:
         inputresponse_text.set_color("g")
         inputresponse_text.set_text("Done")
-        pointslist_input_buffer = event
+        pointlist_input_buffer = event
         points.update_draw()
 
 
@@ -69,20 +69,20 @@ if __name__ == "__main__":
         hovercolor=mcolors.CSS4_COLORS["palegreen"],
     )
     find_button.on_clicked(on_findbutton_clicked)
-    pointslist_input = TextBox(
+    pointlist_input = TextBox(
         plt.axes((0.5, 0.95, 0.3, 0.05)),
         "Путь к списку точек:",
         "./2_1/data/plist.txt",
         hovercolor=mcolors.CSS4_COLORS["whitesmoke"],
     )
-    pointslist_input.on_submit(on_pointlistpath_submit)
+    pointlist_input.on_submit(on_pointlistpath_submit)
     inputresponse_text = text(0, -0.5, "")
 
-    pointslist_input_buffer: str = pointslist_input.text
+    pointlist_input_buffer: str = pointlist_input.text
 
     points = PointsDraw(axes, scale=6)
 
-    read_pointslist_from_file(pointslist_input.text)
+    read_pointlist_from_file(pointlist_input.text)
 
     points.adjust_axis_limits()
     plt.show()
