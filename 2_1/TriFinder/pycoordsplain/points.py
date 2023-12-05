@@ -3,18 +3,18 @@ import numpy as np
 
 
 class Point:
-    def __init__(self, number: int, x: int, y: int) -> None:
+    def __init__(self, number: int, x: float, y: float) -> None:
         self.number: int = number
-        self.x: int = x
-        self.y: int = y
+        self.x: float = x
+        self.y: float = y
 
 
 class PointsDraw:
     def __init__(
         self,
         axes,
-        scale: int = 1,
-        color="k",
+        color,
+        scale: int = 3,
     ) -> None:
         self.pointCount = 1
         self.axes = axes
@@ -28,21 +28,20 @@ class PointsDraw:
             xytext=(10, -20),
             textcoords="offset points",
             bbox=dict(boxstyle="round", fc="w"),
-            # arrowprops=dict(arrowstyle="->"),
         )
         self.annotation.set_visible(False)
 
         self.axes.figure.canvas.mpl_connect("motion_notify_event", self.on_hover)
         self.axes.figure.canvas.mpl_connect("axes_leave_event", self.on_leave)
 
-    def add_point(self, x, y) -> None:
+    def add_point(self, x: float, y: float) -> None:
         point = Point(self.pointCount, x, y)
         self.pointCount += 1
         self.list.append(point)
         self.update_draw()
 
     def update_draw(self):
-        coords: list[tuple[int, int]] = [(point.x, point.y) for point in self.list]
+        coords: list[tuple[float, float]] = [(point.x, point.y) for point in self.list]
         self.draw.set_offsets(coords)
         self.adjust_axis_limits()
         self.axes.figure.canvas.draw_idle()
@@ -98,5 +97,5 @@ class PointsDraw:
     def update_annotation(self, point):
         x, y = point.x, point.y
         self.annotation.xy = (x, y)
-        self.annotation.set_text(f"Точка {point.number}: [{x:.0f}, {y:.0f}]")
+        self.annotation.set_text(f"Point {point.number}: [{x:.0f}, {y:.0f}]")
         self.axes.figure.canvas.draw_idle()

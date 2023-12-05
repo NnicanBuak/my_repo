@@ -35,7 +35,9 @@ def read_pointlist_from_file(file_path: str) -> str | None:
 
 
 def on_findbutton_clicked(event) -> None:
-    min_max_triangle(points.list)
+    min_triangle, max_triangle = min_max_triangle(points.list)
+    triangles.add_triangle("min", min_triangle.point1, min_triangle.point2, min_triangle.point3)
+    triangles.add_triangle("max", min_triangle.point1, min_triangle.point2, min_triangle.point3)
 
 
 def on_pointlistpath_submit(event) -> None:
@@ -78,7 +80,8 @@ if __name__ == "__main__":
     pointlist_input.on_submit(on_pointlistpath_submit)
     inputresponse_text = text(0, -0.5, "")
 
-    points = PointsDraw(axes, scale=6)
+    points = PointsDraw(axes, mcolors.CSS4_COLORS["stategray"], scale=6)
+    triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], 10)
 
     pointlist_input_buffer: str = pointlist_input.text
     exception = read_pointlist_from_file(pointlist_input.text)
