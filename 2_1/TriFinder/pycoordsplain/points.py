@@ -76,11 +76,17 @@ class PointsDraw:
         if not self.list:
             return None
 
-        for point in self.list:
-            distance = np.sqrt((point.x - x) ** 2 + (point.y - y) ** 2)
-            if distance <= self.scale * 0.05:
-                return point
-        return None
+        valid_points = [
+            point
+            for point in self.list
+            if np.sqrt((point.x - x) ** 2 + (point.y - y) ** 2) <= self.scale * 0.1
+        ]
+
+        return min(
+            valid_points,
+            key=lambda point: np.sqrt((point.x - x) ** 2 + (point.y - y) ** 2),
+            default=None,
+        )
 
     def on_hover(self, event) -> None:
         if (

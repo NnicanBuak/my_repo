@@ -33,10 +33,6 @@ def read_pointslist_from_file(file_path: str) -> str | None:
         return "An unexpected error occurred"
 
 
-def distance_squared(point1: Point, point2: Point) -> int:
-    return (point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2
-
-
 def on_findbutton_clicked(event) -> None:
     min_max_triangle(points.list)
 
@@ -56,7 +52,7 @@ if __name__ == "__main__":
     # print(plt.style.available)
     plt.style.use("seaborn-v0_8-darkgrid")
     # print(matplotlib.rcParams.keys())
-    plt.rcParams["figure.figsize"] = (8, 8)
+    plt.rcParams["figure.figsize"] = (6, 6)
 
     figure, axes = plt.subplots()
     axes.set_title("Coordinate plane")
@@ -65,17 +61,17 @@ if __name__ == "__main__":
     find_button = Button(plt.axes((0.9, 0.95, 0.1, 0.05)), "Поиск", color="g")
     find_button.on_clicked(on_findbutton_clicked)
     pointslist_input = TextBox(
-        plt.axes((0.18, 0.95, 0.3, 0.05)),
+        plt.axes((0.5, 0.95, 0.3, 0.05)),
         "Путь к списку точек:",
         "./2_1/data/plist.txt",
     )
     pointslist_input.on_submit(on_pointlistpath_submit)
-    error_text = text(0, -0.4, "")
+    error_text = text(0, -0.5, "")
     error_text.set_color("r")
 
     pointslist_input_buffer: str = pointslist_input.text
 
-    points = PointsDraw(axes, scale=10)
+    points = PointsDraw(axes, scale=6)
 
     read_pointslist_from_file(pointslist_input.text)
 
