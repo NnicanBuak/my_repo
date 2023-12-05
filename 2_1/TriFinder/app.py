@@ -80,7 +80,7 @@ if __name__ == "__main__":
     pointlist_input.on_submit(on_pointlistpath_submit)
     inputresponse_text = text(0, -0.5, "")
 
-    points = PointsDraw(axes, mcolors.CSS4_COLORS["stategray"], scale=6)
+    points = PointsDraw(axes, mcolors.CSS4_COLORS["slategray"], scale=6)
     triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], 10)
 
     pointlist_input_buffer: str = pointlist_input.text
