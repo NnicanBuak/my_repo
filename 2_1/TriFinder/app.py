@@ -5,6 +5,7 @@ from pycoordsplain.triangles import Triangle, TrianglesDraw, min_max_triangle
 
 
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from matplotlib.pyplot import text
 from matplotlib.widgets import Button, TextBox
 from matplotlib.tri import Triangulation
@@ -41,11 +42,14 @@ def on_pointlistpath_submit(event) -> None:
     global pointslist_input_buffer
     exception = read_pointslist_from_file(event)
     if exception:
-        error_text.set_text(exception)
+        inputresponse_text.set_color("r")
+        inputresponse_text.set_text(exception)
         pointslist_input.set_val(pointslist_input_buffer)
-        return
-    pointslist_input_buffer = event
-    points.update_draw()
+    elif event != pointslist_input_buffer:
+        inputresponse_text.set_color("g")
+        inputresponse_text.set_text("Done")
+        pointslist_input_buffer = event
+        points.update_draw()
 
 
 if __name__ == "__main__":
@@ -58,16 +62,21 @@ if __name__ == "__main__":
     axes.set_title("Coordinate plane")
     axes.set_xlabel("X-axis")
     axes.set_ylabel("Y-axis")
-    find_button = Button(plt.axes((0.9, 0.95, 0.1, 0.05)), "Поиск", color="g")
+    find_button = Button(
+        plt.axes((0.9, 0.95, 0.1, 0.05)),
+        "Поиск",
+        color=mcolors.CSS4_COLORS["lightgreen"],
+        hovercolor=mcolors.CSS4_COLORS["palegreen"],
+    )
     find_button.on_clicked(on_findbutton_clicked)
     pointslist_input = TextBox(
         plt.axes((0.5, 0.95, 0.3, 0.05)),
         "Путь к списку точек:",
         "./2_1/data/plist.txt",
+        hovercolor=mcolors.CSS4_COLORS["whitesmoke"],
     )
     pointslist_input.on_submit(on_pointlistpath_submit)
-    error_text = text(0, -0.5, "")
-    error_text.set_color("r")
+    inputresponse_text = text(0, -0.5, "")
 
     pointslist_input_buffer: str = pointslist_input.text
 
