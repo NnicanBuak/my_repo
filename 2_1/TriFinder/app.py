@@ -63,7 +63,7 @@ if __name__ == "__main__":
     axes.set_xlabel("X-axis")
     axes.set_ylabel("Y-axis")
     find_button = Button(
-        plt.axes((0.45, 0.95, 0.2, 0.05)),
+        plt.axes((0.7, 0.95, 0.2, 0.05)),
         "Find Triangles",
         color=mcolors.CSS4_COLORS["lightgreen"],
         hovercolor=mcolors.CSS4_COLORS["palegreen"],
@@ -78,11 +78,16 @@ if __name__ == "__main__":
     pointlist_input.on_submit(on_pointlistpath_submit)
     inputresponse_text = text(0, -0.5, "")
 
-    pointlist_input_buffer: str = pointlist_input.text
-
     points = PointsDraw(axes, scale=6)
 
-    read_pointlist_from_file(pointlist_input.text)
-
+    pointlist_input_buffer: str = pointlist_input.text
+    exception = read_pointlist_from_file(pointlist_input.text)
+    if exception:
+        inputresponse_text.set_color("r")
+        inputresponse_text.set_text(exception)
+        pointlist_input.set_val(pointlist_input_buffer)
+    else:
+        inputresponse_text.set_color("g")
+        inputresponse_text.set_text("Done")
     points.adjust_axis_limits()
     plt.show()
