@@ -14,25 +14,13 @@ class PointsDraw:
         self,
         axes,
         scale: int = 1,
-        color: Literal[
-            "blue", "green", "red", "cyan", "magenta", "yellow", "black", "white"
-        ] = "black",
+        color="k",
     ) -> None:
-        colors = {
-            "blue": "b",
-            "green": "g",
-            "red": "r",
-            "cyan": "c",
-            "magenta": "m",
-            "yellow": "y",
-            "black": "k",
-            "white": "w",
-        }
         self.pointCount = 1
         self.axes = axes
         self.scale: int = scale
         self.list: list[Point] = []
-        self.draw = self.axes.scatter([], [], s=scale, c=colors[color])
+        self.draw = self.axes.scatter([], [], s=scale, c=color)
 
         self.annotation = self.axes.annotate(
             "",
