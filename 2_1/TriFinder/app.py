@@ -70,8 +70,8 @@ if __name__ == "__main__":
     )
     find_button.on_clicked(on_findbutton_clicked)
     pointlist_input = TextBox(
-        plt.axes((0.5, 0.95, 0.3, 0.05)),
-        "Путь к списку точек:",
+        plt.axes((0.15, 0.95, 0.3, 0.05)),
+        "Path:",
         "./2_1/data/plist.txt",
         hovercolor=mcolors.CSS4_COLORS["whitesmoke"],
     )
