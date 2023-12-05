@@ -63,8 +63,8 @@ if __name__ == "__main__":
     axes.set_xlabel("X-axis")
     axes.set_ylabel("Y-axis")
     find_button = Button(
-        plt.axes((0.9, 0.95, 0.1, 0.05)),
-        "Поиск",
+        plt.axes((0.45, 0.95, 0.2, 0.05)),
+        "Find Triangles",
         color=mcolors.CSS4_COLORS["lightgreen"],
         hovercolor=mcolors.CSS4_COLORS["palegreen"],
     )
