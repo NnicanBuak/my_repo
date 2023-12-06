@@ -1,7 +1,7 @@
 # Python >3.10
 
-from pycoordsplain.points import PointsDraw
-from pycoordsplain.triangles import TrianglesDraw, min_max_triangle
+from pycoordsplain.points import Point, PointsDraw
+from pycoordsplain.triangles import Triangle, TrianglesDraw
 
 
 import matplotlib.pyplot as plt
@@ -9,8 +9,9 @@ import matplotlib.colors as mcolors
 from matplotlib.pyplot import text
 from matplotlib.widgets import Button, TextBox
 
+from itertools import permutations
+import uuid
 import re
-
 
 def read_pointlist_from_file(file_path: str) -> str | None:
     try:
@@ -31,6 +32,27 @@ def read_pointlist_from_file(file_path: str) -> str | None:
     except Exception as e:
         print(f"Error: An unexpected error occurred - {e}")
         return "An unexpected error occurred"
+
+def min_max_triangle(
+    points: list[Point], triangles_draw: TrianglesDraw
+) -> tuple[Triangle, Triangle]:
+    triangles_area_map: dict[Triangle, float] = {}
+    count = 1
+    for count, combo in enumerate(permutations(points, 3), 1):
+        current_triangle: Triangle = Triangle(f"temp-{uuid.uuid4()}", *combo)
+        area: float = current_triangle.area
+        if current_triangle.valid:
+            triangles_draw.add_triangle(current_triangle)
+            triangles_area_map[current_triangle] = area
+            if count % (len(points) // 100):
+                print(f"Iteration {count}: Area = {area}")
+        else:
+            print(
+                f"not valid: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}"
+            )
+    triangles_draw.remove_triangles_by_id_pattern(r"/^temp-.*/")
+    return min(set(triangles_area_map), key=triangles_area_map.get), max(set(triangles_area_map), key=triangles_area_map.get)  # type: ignore
+
 
 
 def on_pointlistpath_submit(event) -> None:
@@ -60,7 +82,6 @@ def on_findbutton_clicked(event) -> None:
         triangles.add_triangle_with_points(
             "max", max_triangle.point1, max_triangle.point2, max_triangle.point3
         )
-        print(f"Triangles Drawed: {len(triangles.list)}")
         print(f"min area: {min_triangle.area}, max area: {max_triangle.area}")
 
 
