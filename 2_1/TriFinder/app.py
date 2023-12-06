@@ -1,8 +1,7 @@
 # Python >3.10
 
-import matplotlib
-from pycoordsplain.points import Point, PointsDraw
-from pycoordsplain.triangles import Triangle, TrianglesDraw, min_max_triangle
+from pycoordsplain.points import PointsDraw
+from pycoordsplain.triangles import TrianglesDraw, min_max_triangle
 
 
 import matplotlib.pyplot as plt
