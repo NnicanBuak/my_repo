@@ -1,5 +1,6 @@
 # Python >3.10
 
+import matplotlib
 from pycoordsplain.points import Point, PointsDraw
 from pycoordsplain.triangles import Triangle, TrianglesDraw, min_max_triangle
 
@@ -8,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.pyplot import text
 from matplotlib.widgets import Button, TextBox
-from matplotlib.tri import Triangulation
+
 
 import re
 
@@ -37,7 +38,7 @@ def read_pointlist_from_file(file_path: str) -> str | None:
 def on_findbutton_clicked(event) -> None:
     min_triangle, max_triangle = min_max_triangle(points.list)
     triangles.add_triangle("min", min_triangle.point1, min_triangle.point2, min_triangle.point3)
-    triangles.add_triangle("max", min_triangle.point1, min_triangle.point2, min_triangle.point3)
+    triangles.add_triangle("max", max_triangle.point1, max_triangle.point2, max_triangle.point3)
 
 
 def on_pointlistpath_submit(event) -> None:
@@ -65,8 +66,8 @@ if __name__ == "__main__":
     axes.set_xlabel("X-axis")
     axes.set_ylabel("Y-axis")
     find_button = Button(
-        plt.axes((0.7, 0.95, 0.2, 0.05)),
-        "Find Triangles",
+        plt.axes((0.6, 0.95, 0.3, 0.05)),
+        "Find min/max Triangles",
         color=mcolors.CSS4_COLORS["lightgreen"],
         hovercolor=mcolors.CSS4_COLORS["palegreen"],
     )

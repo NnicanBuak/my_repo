@@ -1,5 +1,7 @@
-from typing import Tuple
 from .points import Point
+
+
+from matplotlib.tri import Triangulation
 
 from itertools import permutations
 import numpy as np
@@ -7,13 +9,28 @@ import numpy as np
 
 class Triangle:
     def __init__(self, id: str, point1: Point, point2: Point, point3: Point) -> None:
+        if point1 == point2 or point1 == point3 or point2 == point3:
+            raise ValueError("Точки треугольника должны быть различными.")
         self.id: str = id
         self.point1: Point = point1
         self.point2: Point = point2
         self.point3: Point = point3
+        self.triangulation: Triangulation = self.create_triangulation()
+
+    def create_triangulation(self) -> Triangulation:
+        unique_points = set(sorted([self.point1, self.point2, self.point3], key=lambda p: (p.x, p.y)))
+        print([(point.x, point.y) for point in unique_points])
+
+        if len(unique_points) < 3:
+            raise ValueError("Должно быть не менее трех уникальных точек для Triangulation.")
+
+        return Triangulation(
+            [point.x for point in unique_points],
+            [point.y for point in unique_points],
+        )
 
     @property
-    def points(self) -> Tuple[Point, Point, Point]:
+    def points(self) -> tuple[Point, Point, Point]:
         return (self.point1, self.point2, self.point3)
 
     @property
@@ -26,19 +43,13 @@ class Triangle:
             )
         )
 
-
 class TrianglesDraw:
-    def __init__(
-        self,
-        axes,
-        color,
-        points_scale: int = 3,
-    ) -> None:
+    def __init__(self, axes, color, points_scale: int = 3) -> None:
         self.triangleCount = 1
         self.axes = axes
+        self.color = color
         self.scale: int = points_scale
         self.list: list[Triangle] = []
-        self.draw = self.axes.scatter([], [], s=points_scale, c=color)
 
         self.annotation = self.axes.annotate(
             "",
@@ -53,30 +64,10 @@ class TrianglesDraw:
         self.axes.figure.canvas.mpl_connect("axes_leave_event", self.on_leave)
 
     def add_triangle(self, id: str, point1: Point, point2: Point, point3: Point) -> None:
-        self.list.append(Triangle(id, point1, point2, point3))
+        triangle = Triangle(id, point1, point2, point3)
+        self.list.append(triangle)
+
         self.update_draw()
-
-    def update_draw(self):
-        coords: list[tuple[float, float]] = [
-            (point.x, point.y) for triangle in self.list for point in triangle.points
-        ]
-        self.draw.set_offsets(coords)
-        self.adjust_axis_limits()
-        self.axes.figure.canvas.draw_idle()
-
-    def adjust_axis_limits(self) -> None:
-        if not self.list:
-            return
-
-        all_points = [point for triangle in self.list for point in triangle.points]
-        x_values, y_values = zip(*[(point.x, point.y) for point in all_points])
-
-        x_min, x_max = min(x_values), max(x_values)
-        y_min, y_max = min(y_values), max(y_values)
-
-        buffer = 5
-        self.axes.set_xlim(x_min - buffer, x_max + buffer)
-        self.axes.set_ylim(y_min - buffer, y_max + buffer)
 
     def on_triangle(self, x, y) -> Triangle | None:
         if not self.list:
@@ -111,6 +102,27 @@ class TrianglesDraw:
             ),
             default=None,
         )
+
+    def update_draw(self):
+        if not self.list:
+            return
+
+        all_triangles = []
+        for triangle in self.list:
+            all_triangles.extend([self.list.index(triangle) * 3 + i for i in range(3)])
+
+        new_triangulation = Triangulation(
+            [point.x for triangle in self.list for point in triangle.points],
+            [point.y for triangle in self.list for point in triangle.points],
+            triangles=[all_triangles],
+        )
+
+        if self.draw is not None:
+            self.draw.set_triangulation(new_triangulation)
+        else:
+            self.draw, = self.axes.triplot(new_triangulation, c=self.color)
+
+        self.axes.figure.canvas.draw_idle()
 
     def on_hover(self, event) -> None:
         if (
@@ -175,17 +187,14 @@ class TrianglesDraw:
 
 
 def min_max_triangle(points) -> tuple[Triangle, Triangle]:
-    min_triangle = Triangle(
-        "min", Point(0, x=0, y=0), Point(0, x=0, y=0), Point(0, x=0, y=0)
-    )
-    max_triangle = Triangle(
-        "max", Point(0, x=0, y=0), Point(0, x=0, y=0), Point(0, x=0, y=0)
-    )
+    min_triangle = None # type: ignore
+    max_triangle = None # type: ignore
     min_area: float = float("inf")
     max_area: float = 0.0
 
     for combo in permutations(points, 3):
-        current_triangle = Triangle("min", *combo)
+        print(combo)
+        current_triangle = Triangle("temp", *combo)
         area: float = current_triangle.area
         if area < min_area:
             min_area = area
