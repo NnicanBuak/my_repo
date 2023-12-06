@@ -42,6 +42,7 @@ def on_findbutton_clicked(event) -> None:
     triangles.add_triangle(
         "max", max_triangle.point1, max_triangle.point2, max_triangle.point3
     )
+    print(min_triangle.area, max_triangle.area)
 
 
 def on_pointlistpath_submit(event) -> None:
@@ -85,7 +86,7 @@ if __name__ == "__main__":
     inputresponse_text = text(0, -0.5, "")
 
     points = PointsDraw(axes, mcolors.CSS4_COLORS["slategray"], scale=6)
-    triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], points_scale=8)
+    triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], points_scale=7)
 
     pointlist_input_buffer: str = pointlist_input.text
     exception = read_pointlist_from_file(pointlist_input.text)

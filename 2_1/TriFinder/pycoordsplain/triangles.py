@@ -184,8 +184,11 @@ def min_max_triangle(points: list[Point]) -> tuple[Triangle, Triangle]:
     for combo in permutations(points, 3):
         current_triangle: Triangle = Triangle("temp", *combo)
         area: float = current_triangle.area
-        triangles_area_map[current_triangle] = area
-        print(f"{count}: {area}")
-        count += 1
-
+        if current_triangle.valid:
+            triangles_area_map[current_triangle] = area
+            print(f"{count}: {area}")
+            count += 1
+        else:
+            print(f"not valid: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}")
+    print([triangle for triangle, area in triangles_area_map.items() if area == min(triangles_area_map.values())])
     return min(triangles_area_map, key=triangles_area_map.get), max(triangles_area_map, key=triangles_area_map.get)  # type: ignore
