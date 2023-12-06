@@ -87,23 +87,8 @@ class TrianglesDraw:
         if not self.list:
             return None
 
-        valid_triangles = [
-            t
-            for t in self.list
-            if self.point_in_triangle(
-                x,
-                y,
-                t.point1.x,
-                t.point1.y,
-                t.point2.x,
-                t.point2.y,
-                t.point3.x,
-                t.point3.y,
-            )
-        ]
-
         return min(
-            valid_triangles,
+            self.list,
             key=lambda t: self.distance_to_triangle(
                 x,
                 y,

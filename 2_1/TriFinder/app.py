@@ -42,7 +42,6 @@ def min_max_triangle(
         current_triangle: Triangle = Triangle(f"temp-{uuid.uuid4()}", *combo)
         area: float = current_triangle.area
         if current_triangle.valid:
-            triangles_draw.add_triangle(current_triangle)
             triangles_area_map[current_triangle] = area
             if count % (len(points) // 100):
                 print(f"Iteration {count}: Area = {area}")
@@ -50,7 +49,6 @@ def min_max_triangle(
             print(
                 f"not valid: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}"
             )
-    triangles_draw.remove_triangles_by_id_pattern(r"/^temp-.*/")
     return min(set(triangles_area_map), key=triangles_area_map.get), max(set(triangles_area_map), key=triangles_area_map.get)  # type: ignore
 
 
@@ -112,7 +110,7 @@ if __name__ == "__main__":
     inputresponse_text = text(0, -0.5, "")
 
     points = PointsDraw(axes, mcolors.CSS4_COLORS["slategray"], scale=6)
-    triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], points_scale=7)
+    triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], points_scale=3)
 
     pointlist_input_buffer: str = pointlist_input.text
     exception = read_pointlist_from_file(pointlist_input.text)
