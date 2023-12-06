@@ -34,7 +34,14 @@ class PointsDraw:
         self.axes.figure.canvas.mpl_connect("motion_notify_event", self.on_hover)
         self.axes.figure.canvas.mpl_connect("axes_leave_event", self.on_leave)
 
-    def add_point(self, x: float, y: float) -> None:
+    def add_point(self, point: Point) -> ValueError | None:
+        if point.number in [point.number for point in self.list]:
+            return ValueError(f"A point with {point.number} number already exists")
+        self.pointCount += 1
+        self.list.append(point)
+        self.update_draw()
+
+    def add_point_with_coordinates(self, x: float, y: float) -> None:
         point = Point(self.pointCount, x, y)
         self.pointCount += 1
         self.list.append(point)

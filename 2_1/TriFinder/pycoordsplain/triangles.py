@@ -3,6 +3,7 @@ from .points import Point
 
 from matplotlib.tri import Triangulation
 
+from typing import overload
 from itertools import permutations
 import numpy as np
 
@@ -14,22 +15,12 @@ class Triangle:
         self.point2: Point = point2
         self.point3: Point = point3
         self.valid: bool = self.check_validity()
-        # self.triangulation: Triangulation | None = self.create_triangulation()
 
     def check_validity(self) -> bool:
         points = [self.point1, self.point2, self.point3]
         return (points[1].y - points[0].y) * (points[2].x - points[1].x) != (
             points[2].y - points[1].y
         ) * (points[1].x - points[0].x)
-
-    # def create_triangulation(self) -> Triangulation | None:
-    #     if not self.valid:
-    #         return None
-
-    #     return Triangulation(
-    #         np.array([point.x for point in [self.point1, self.point2, self.point3]]),
-    #         np.array([point.y for point in [self.point1, self.point2, self.point3]]),
-    #     )
 
     @property
     def points(self) -> tuple[Point, Point, Point]:
@@ -67,11 +58,16 @@ class TrianglesDraw:
         self.axes.figure.canvas.mpl_connect("motion_notify_event", self.on_hover)
         self.axes.figure.canvas.mpl_connect("axes_leave_event", self.on_leave)
 
-    def add_triangle(
-        self, id: str, point1: Point, point2: Point, point3: Point
-    ) -> None:
-        triangle = Triangle(id, point1, point2, point3)
+    def add_triangle(self, triangle: Triangle) -> ValueError | None:
+        if triangle.id in [triangle.id for triangle in self.list]:
+            return ValueError(f"A point with {triangle.id} id already exists")
 
+        if triangle.valid:
+            self.list.append(triangle)
+            self.update_draw()
+
+    def add_triangle_with_points(self, id: str, point1: Point, point2: Point, point3: Point) -> None:
+        triangle = Triangle(id, point1, point2, point3)
         if triangle.valid:
             self.list.append(triangle)
             self.update_draw()
@@ -146,7 +142,7 @@ class TrianglesDraw:
         triangle_points  = [triangle.point1, triangle.point2, triangle.point3]
         self.annotation.xy = (min(point.x for point in triangle_points), min(point.y for point in triangle_points))
         self.annotation.set_text(
-            f"Triangle {triangle.id}: P{triangle.point1.number}[{triangle.point1.x:.0f}, {triangle.point1.y:.0f}], P{triangle.point2.number}[{triangle.point2.x:.0f}, {triangle.point2.y:.0f}], P{triangle.point3.number}[{triangle.point3.x:.0f}, {triangle.point3.y:.0f}]"
+            f"Triangle {triangle.id}: {triangle.area}\nP{triangle.point1.number}[{triangle.point1.x:.0f}, {triangle.point1.y:.0f}], P{triangle.point2.number}[{triangle.point2.x:.0f}, {triangle.point2.y:.0f}], P{triangle.point3.number}[{triangle.point3.x:.0f}, {triangle.point3.y:.0f}]"
         )
         self.axes.figure.canvas.draw_idle()
 
@@ -178,17 +174,19 @@ class TrianglesDraw:
         return num / den
 
 
-def min_max_triangle(points: list[Point]) -> tuple[Triangle, Triangle]:
+def min_max_triangle(points: list[Point], triangles_draw: TrianglesDraw) -> tuple[Triangle, Triangle]:
     triangles_area_map: dict[Triangle, float] = {}
     count = 1
     for combo in permutations(points, 3):
         current_triangle: Triangle = Triangle("temp", *combo)
         area: float = current_triangle.area
         if current_triangle.valid:
+            triangles_draw.add_triangle(current_triangle)
             triangles_area_map[current_triangle] = area
-            print(f"{count}: {area}")
+            if count % (len(points) // 100):
+                print(f"{count}: {area}")
             count += 1
         else:
             print(f"not valid: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}")
-    print([triangle for triangle, area in triangles_area_map.items() if area == min(triangles_area_map.values())])
-    return min(triangles_area_map, key=triangles_area_map.get), max(triangles_area_map, key=triangles_area_map.get)  # type: ignore
+    # print([triangle for triangle, area in triangles_area_map.items() if area == min(triangles_area_map.values())])
+    return min(set(triangles_area_map), key=triangles_area_map.get), max(set(triangles_area_map), key=triangles_area_map.get)  # type: ignore

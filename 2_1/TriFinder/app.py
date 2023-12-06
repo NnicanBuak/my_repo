@@ -18,7 +18,7 @@ def read_pointlist_from_file(file_path: str) -> str | None:
             points.list = []
             for point_coordinates in re.findall(r"\[\d{1,}, \d{1,}]", pointlist.read()):
                 point_coordinates_list = point_coordinates.strip("[]").split(",")
-                points.add_point(
+                points.add_point_with_coordinates(
                     int(point_coordinates_list[0]), int(point_coordinates_list[1])
                 )
 
@@ -31,18 +31,6 @@ def read_pointlist_from_file(file_path: str) -> str | None:
     except Exception as e:
         print(f"Error: An unexpected error occurred - {e}")
         return "An unexpected error occurred"
-
-
-def on_findbutton_clicked(event) -> None:
-    min_triangle, max_triangle = min_max_triangle(points.list)
-    triangles.list = []
-    triangles.add_triangle(
-        "min", min_triangle.point1, min_triangle.point2, min_triangle.point3
-    )
-    triangles.add_triangle(
-        "max", max_triangle.point1, max_triangle.point2, max_triangle.point3
-    )
-    print(min_triangle.area, max_triangle.area)
 
 
 def on_pointlistpath_submit(event) -> None:
@@ -59,11 +47,28 @@ def on_pointlistpath_submit(event) -> None:
         points.update_draw()
 
 
+def on_findbutton_clicked(event) -> None:
+    global min_max_triangle_flag
+    if not min_max_triangle_flag:
+        min_max_triangle_flag = True
+        min_triangle, max_triangle = min_max_triangle(points.list, triangles)
+        min_max_triangle_flag = False
+        triangles.list = []
+        triangles.add_triangle_with_points(
+            "min", min_triangle.point1, min_triangle.point2, min_triangle.point3
+        )
+        triangles.add_triangle_with_points(
+            "max", max_triangle.point1, max_triangle.point2, max_triangle.point3
+        )
+        print(f"Triangles Drawed: {len(triangles.list)}")
+        print(f"min area: {min_triangle.area}, max area: {max_triangle.area}")
+
+
 if __name__ == "__main__":
     # print(plt.style.available)
     plt.style.use("seaborn-v0_8-darkgrid")
     # print(matplotlib.rcParams.keys())
-    plt.rcParams["figure.figsize"] = (6, 6)
+    plt.rcParams["figure.figsize"] = (7, 7)
 
     figure, axes = plt.subplots()
     axes.set_title("Coordinate plane")
@@ -97,5 +102,9 @@ if __name__ == "__main__":
     else:
         inputresponse_text.set_color("g")
         inputresponse_text.set_text("Done")
+
     points.adjust_axis_limits()
+
+    min_max_triangle_flag = False
+
     plt.show()
