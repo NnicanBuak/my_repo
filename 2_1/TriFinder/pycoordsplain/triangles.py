@@ -14,7 +14,7 @@ class Triangle:
         self.point2: Point = point2
         self.point3: Point = point3
         self.valid: bool = self.check_validity()
-        self.triangulation: Triangulation | None = self.create_triangulation()
+        # self.triangulation: Triangulation | None = self.create_triangulation()
 
     def check_validity(self) -> bool:
         points = [self.point1, self.point2, self.point3]
@@ -22,14 +22,14 @@ class Triangle:
             points[2].y - points[1].y
         ) * (points[1].x - points[0].x)
 
-    def create_triangulation(self) -> Triangulation | None:
-        if not self.valid:
-            return None
+    # def create_triangulation(self) -> Triangulation | None:
+    #     if not self.valid:
+    #         return None
 
-        return Triangulation(
-            np.array([point.x for point in [self.point1, self.point2, self.point3]]),
-            np.array([point.y for point in [self.point1, self.point2, self.point3]]),
-        )
+    #     return Triangulation(
+    #         np.array([point.x for point in [self.point1, self.point2, self.point3]]),
+    #         np.array([point.y for point in [self.point1, self.point2, self.point3]]),
+    #     )
 
     @property
     def points(self) -> tuple[Point, Point, Point]:
@@ -54,6 +54,7 @@ class TrianglesDraw:
         self.scale: int = points_scale
         self.list: list[Triangle] = []
 
+        self.draw = None
         self.annotation = self.axes.annotate(
             "",
             xy=(0, 0),
@@ -113,21 +114,13 @@ class TrianglesDraw:
         if not self.list:
             return
 
-        all_triangles = []
-        for triangle in self.list:
-            all_triangles.extend([self.list.index(triangle) * 3 + i for i in range(3)])
+        combined_x = np.concatenate([[tri.point1.x, tri.point2.x, tri.point3.x] for tri in self.list])
+        combined_y = np.concatenate([[tri.point1.y, tri.point2.y, tri.point3.y] for tri in self.list])
+        combined_triangles = np.arange(len(combined_x)).reshape(-1, 3)
 
-        new_triangulation = Triangulation(
-            [point.x for triangle in self.list for point in triangle.points],
-            [point.y for triangle in self.list for point in triangle.points],
-            triangles=[all_triangles],
-        )
+        combined_triangulation = Triangulation(combined_x, combined_y, combined_triangles)
 
-        if self.draw is not None:
-            self.draw.set_triangulation(new_triangulation)
-        else:
-            (self.draw,) = self.axes.triplot(new_triangulation, c=self.color)
-
+        self.draw_lines,self.draw_markers = self.axes.triplot(combined_triangulation, marker='o', markersize=self.scale, linestyle='-', c=self.color)
         self.axes.figure.canvas.draw_idle()
 
     def on_hover(self, event) -> None:
@@ -150,17 +143,10 @@ class TrianglesDraw:
         self.axes.figure.canvas.draw_idle()
 
     def update_annotation(self, triangle):
-        x1, y1, x2, y2, x3, y3 = (
-            triangle.point1.x,
-            triangle.point1.y,
-            triangle.point2.x,
-            triangle.point2.y,
-            triangle.point3.x,
-            triangle.point3.y,
-        )
-        self.annotation.xy = (x1, y1)
+        triangle_points  = [triangle.point1, triangle.point2, triangle.point3]
+        self.annotation.xy = (min(point.x for point in triangle_points), min(point.y for point in triangle_points))
         self.annotation.set_text(
-            f"Треугольник {triangle.id}: P1[{x1:.0f}, {y1:.0f}], P2[{x2:.0f}, {y2:.0f}], P3[{x3:.0f}, {y3:.0f}]"
+            f"Triangle {triangle.id}: P{triangle.point1.number}[{triangle.point1.x:.0f}, {triangle.point1.y:.0f}], P{triangle.point2.number}[{triangle.point2.x:.0f}, {triangle.point2.y:.0f}], P{triangle.point3.number}[{triangle.point3.x:.0f}, {triangle.point3.y:.0f}]"
         )
         self.axes.figure.canvas.draw_idle()
 
@@ -192,11 +178,14 @@ class TrianglesDraw:
         return num / den
 
 
-def min_max_triangle(points) -> tuple[Triangle, Triangle]:
+def min_max_triangle(points: list[Point]) -> tuple[Triangle, Triangle]:
     triangles_area_map: dict[Triangle, float] = {}
+    count = 1
     for combo in permutations(points, 3):
         current_triangle: Triangle = Triangle("temp", *combo)
         area: float = current_triangle.area
         triangles_area_map[current_triangle] = area
+        print(f"{count}: {area}")
+        count += 1
 
     return min(triangles_area_map, key=triangles_area_map.get), max(triangles_area_map, key=triangles_area_map.get)  # type: ignore
