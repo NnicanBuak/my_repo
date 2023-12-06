@@ -5,6 +5,7 @@ from pycoordsplain.triangles import Triangle, TrianglesDraw
 
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import matplotlib.colors as mcolors
 from matplotlib.pyplot import text
 from matplotlib.widgets import Button, TextBox
@@ -12,6 +13,7 @@ from matplotlib.widgets import Button, TextBox
 from itertools import permutations
 import uuid
 import re
+
 
 def read_pointlist_from_file(file_path: str) -> str | None:
     try:
@@ -33,24 +35,28 @@ def read_pointlist_from_file(file_path: str) -> str | None:
         print(f"Error: An unexpected error occurred - {e}")
         return "An unexpected error occurred"
 
+
 def min_max_triangle(
     points: list[Point], triangles_draw: TrianglesDraw
 ) -> tuple[Triangle, Triangle]:
+    progressbar_max_width: float = progressbar.get_width()
+    progressbar_text.set_text("")
+
     triangles_area_map: dict[Triangle, float] = {}
-    count = 1
+
     for count, combo in enumerate(permutations(points, 3), 1):
         current_triangle: Triangle = Triangle(f"temp-{uuid.uuid4()}", *combo)
         area: float = current_triangle.area
         if current_triangle.valid:
             triangles_area_map[current_triangle] = area
             if count % (len(points) // 100):
-                print(f"Iteration {count}: Area = {area}")
+                progressbar.set_width(count / len(points) * progressbar_max_width)
+                progressbar_text.set_text(f"{(count / len(points) * 100):.1f}")
         else:
             print(
                 f"not valid: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}"
             )
     return min(set(triangles_area_map), key=triangles_area_map.get), max(set(triangles_area_map), key=triangles_area_map.get)  # type: ignore
-
 
 
 def on_pointlistpath_submit(event) -> None:
@@ -108,12 +114,21 @@ if __name__ == "__main__":
     )
     pointlist_input.on_submit(on_pointlistpath_submit)
     inputresponse_text = text(0, -0.5, "")
+    progressbar_text = text(0.75, 0.9, "")
+    progressbar_bg = Rectangle(
+        (0.6, 0.9), 0.3, 0.025, color=mcolors.CSS4_COLORS["honeydew"]
+    )
+    progressbar = Rectangle(
+        (0.6, 0.9), 0.3, 0.025, color=mcolors.CSS4_COLORS["greenyellow"]
+    )
+    axes.add_patch(progressbar_bg)
+    axes.add_patch(progressbar)
 
     points = PointsDraw(axes, mcolors.CSS4_COLORS["slategray"], scale=6)
     triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], points_scale=3)
 
     pointlist_input_buffer: str = pointlist_input.text
-    exception = read_pointlist_from_file(pointlist_input.text)
+    exception: str | None = read_pointlist_from_file(pointlist_input.text)
     if exception:
         inputresponse_text.set_color("r")
         inputresponse_text.set_text(exception)
