@@ -10,7 +10,6 @@ import matplotlib.colors as mcolors
 from matplotlib.pyplot import text
 from matplotlib.widgets import Button, TextBox
 
-
 import re
 
 
@@ -39,7 +38,6 @@ def on_findbutton_clicked(event) -> None:
     min_triangle, max_triangle = min_max_triangle(points.list)
     triangles.add_triangle("min", min_triangle.point1, min_triangle.point2, min_triangle.point3)
     triangles.add_triangle("max", max_triangle.point1, max_triangle.point2, max_triangle.point3)
-
 
 def on_pointlistpath_submit(event) -> None:
     global pointlist_input_buffer
