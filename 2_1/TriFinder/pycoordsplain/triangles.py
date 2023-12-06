@@ -66,11 +66,20 @@ class TrianglesDraw:
             self.list.append(triangle)
             self.update_draw()
 
-    def add_triangle_with_points(self, id: str, point1: Point, point2: Point, point3: Point) -> None:
+    def add_triangle_with_points(
+        self, id: str, point1: Point, point2: Point, point3: Point
+    ) -> None:
         triangle = Triangle(id, point1, point2, point3)
         if triangle.valid:
             self.list.append(triangle)
             self.update_draw()
+
+    def remove_triangle(self, id: str) -> None:
+        for triangle in self.list:
+            if triangle.id == id:
+                self.list.remove(triangle)
+                self.update_draw()
+                break
 
     def on_triangle(self, x, y) -> Triangle | None:
         if not self.list:
@@ -110,13 +119,25 @@ class TrianglesDraw:
         if not self.list:
             return
 
-        combined_x = np.concatenate([[tri.point1.x, tri.point2.x, tri.point3.x] for tri in self.list])
-        combined_y = np.concatenate([[tri.point1.y, tri.point2.y, tri.point3.y] for tri in self.list])
+        combined_x = np.concatenate(
+            [[tri.point1.x, tri.point2.x, tri.point3.x] for tri in self.list]
+        )
+        combined_y = np.concatenate(
+            [[tri.point1.y, tri.point2.y, tri.point3.y] for tri in self.list]
+        )
         combined_triangles = np.arange(len(combined_x)).reshape(-1, 3)
 
-        combined_triangulation = Triangulation(combined_x, combined_y, combined_triangles)
+        combined_triangulation = Triangulation(
+            combined_x, combined_y, combined_triangles
+        )
 
-        self.draw_lines,self.draw_markers = self.axes.triplot(combined_triangulation, marker='o', markersize=self.scale, linestyle='-', c=self.color)
+        self.draw_lines, self.draw_markers = self.axes.triplot(
+            combined_triangulation,
+            marker="o",
+            markersize=self.scale,
+            linestyle="-",
+            c=self.color,
+        )
         self.axes.figure.canvas.draw_idle()
 
     def on_hover(self, event) -> None:
@@ -139,8 +160,11 @@ class TrianglesDraw:
         self.axes.figure.canvas.draw_idle()
 
     def update_annotation(self, triangle):
-        triangle_points  = [triangle.point1, triangle.point2, triangle.point3]
-        self.annotation.xy = (min(point.x for point in triangle_points), min(point.y for point in triangle_points))
+        triangle_points = [triangle.point1, triangle.point2, triangle.point3]
+        self.annotation.xy = (
+            min(point.x for point in triangle_points),
+            min(point.y for point in triangle_points),
+        )
         self.annotation.set_text(
             f"Triangle {triangle.id}: {triangle.area}\nP{triangle.point1.number}[{triangle.point1.x:.0f}, {triangle.point1.y:.0f}], P{triangle.point2.number}[{triangle.point2.x:.0f}, {triangle.point2.y:.0f}], P{triangle.point3.number}[{triangle.point3.x:.0f}, {triangle.point3.y:.0f}]"
         )
@@ -174,7 +198,9 @@ class TrianglesDraw:
         return num / den
 
 
-def min_max_triangle(points: list[Point], triangles_draw: TrianglesDraw) -> tuple[Triangle, Triangle]:
+def min_max_triangle(
+    points: list[Point], triangles_draw: TrianglesDraw
+) -> tuple[Triangle, Triangle]:
     triangles_area_map: dict[Triangle, float] = {}
     count = 1
     for combo in permutations(points, 3):
@@ -187,6 +213,8 @@ def min_max_triangle(points: list[Point], triangles_draw: TrianglesDraw) -> tupl
                 print(f"{count}: {area}")
             count += 1
         else:
-            print(f"not valid: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}")
+            print(
+                f"not valid: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}"
+            )
     # print([triangle for triangle, area in triangles_area_map.items() if area == min(triangles_area_map.values())])
     return min(set(triangles_area_map), key=triangles_area_map.get), max(set(triangles_area_map), key=triangles_area_map.get)  # type: ignore
