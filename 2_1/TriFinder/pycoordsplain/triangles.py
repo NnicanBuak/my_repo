@@ -112,7 +112,7 @@ class TrianglesDraw:
         combined_y = np.concatenate(
             [[tri.point1.y, tri.point2.y, tri.point3.y] for tri in self.list]
         )
-        combined_triangles = np.arange(len(combined_x)).reshape(-1, 3)
+        combined_triangles = list(np.arange(len(combined_x)).reshape(-1, 3))
 
         combined_triangulation = Triangulation(
             combined_x, combined_y, combined_triangles

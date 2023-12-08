@@ -36,9 +36,7 @@ def read_pointlist_from_file(file_path: str) -> str | None:
         return "An unexpected error occurred"
 
 
-def min_max_triangle(
-    points: list[Point], triangles_draw: TrianglesDraw
-) -> tuple[Triangle, Triangle]:
+def min_max_triangle(points: list[Point]) -> tuple[Triangle, Triangle]:
     progressbar_max_width: float = progressbar.get_width()
     progressbar_text.set_text("")
 
@@ -76,10 +74,11 @@ def on_pointlistpath_submit(event) -> None:
 def on_findbutton_clicked(event) -> None:
     global min_max_triangle_flag
     if not min_max_triangle_flag:
-        min_max_triangle_flag = True
-        min_triangle, max_triangle = min_max_triangle(points.list, triangles)
-        min_max_triangle_flag = False
         triangles.list = []
+        triangles.update_draw()
+        min_max_triangle_flag = True
+        min_triangle, max_triangle = min_max_triangle(points.list)
+        min_max_triangle_flag = False
         triangles.add_triangle_with_points(
             "min", min_triangle.point1, min_triangle.point2, min_triangle.point3
         )
