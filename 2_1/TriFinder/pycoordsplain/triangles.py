@@ -104,6 +104,18 @@ class TrianglesDraw:
 
     def update_draw(self) -> None:
         if not self.list:
+            if hasattr(self, "draw_lines") and hasattr(self, "draw_markers"):
+                for line in self.draw_lines.get_children():
+                    line.remove()
+                for marker in self.draw_markers.get_children():
+                    marker.remove()
+
+            self.axes.figure.canvas.flush_events()
+            self.axes.figure.canvas.draw_idle()
+
+            # Установка self.draw в None
+            self.draw = None
+
             return
 
         combined_x = np.concatenate(
@@ -112,20 +124,21 @@ class TrianglesDraw:
         combined_y = np.concatenate(
             [[tri.point1.y, tri.point2.y, tri.point3.y] for tri in self.list]
         )
-        combined_triangles = list(np.arange(len(combined_x)).reshape(-1, 3))
+        # print(combined_x)
+        # print(combined_y)
+        if self.draw is None:
+            combined_triangles = list(np.arange(len(combined_x)).reshape(-1, 3))
 
-        combined_triangulation = Triangulation(
-            combined_x, combined_y, combined_triangles
-        )
-
-        self.draw_lines, self.draw_markers = self.axes.triplot(
-            combined_triangulation,
-            marker="o",
-            markersize=self.scale,
-            linestyle="-",
-            c=self.color,
-        )
-        self.axes.figure.canvas.draw_idle()
+            combined_triangulation = Triangulation(combined_x, combined_y, combined_triangles)
+            self.draw_lines, self.draw_markers = self.axes.triplot(
+                combined_triangulation,
+                marker="o",
+                markersize=self.scale,
+                linestyle="-",
+                c=self.color,
+            )
+        else:
+            pass
 
     def on_hover(self, event) -> None:
         if (

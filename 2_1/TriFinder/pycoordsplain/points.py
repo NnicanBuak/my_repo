@@ -39,13 +39,11 @@ class PointsDraw:
             return ValueError(f"A point with {point.number} number already exists")
         self.pointCount += 1
         self.list.append(point)
-        self.update_draw()
 
     def add_point_with_coordinates(self, x: float, y: float) -> None:
         point = Point(self.pointCount, x, y)
         self.pointCount += 1
         self.list.append(point)
-        self.update_draw()
 
     def update_draw(self):
         coords: list[tuple[float, float]] = [(point.x, point.y) for point in self.list]
@@ -68,7 +66,7 @@ class PointsDraw:
 
     def on_point(self, x, y) -> Point | None:
         if not self.list:
-            return None
+            return
 
         valid_points = [
             point

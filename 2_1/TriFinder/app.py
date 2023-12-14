@@ -3,13 +3,12 @@
 from pycoordsplain.points import Point, PointsDraw
 from pycoordsplain.triangles import Triangle, TrianglesDraw
 
-
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 import matplotlib.colors as mcolors
 from matplotlib.pyplot import text
 from matplotlib.widgets import Button, TextBox
 
+import threading
 from itertools import permutations
 import uuid
 import re
@@ -24,6 +23,7 @@ def read_pointlist_from_file(file_path: str) -> str | None:
                 points.add_point_with_coordinates(
                     int(point_coordinates_list[0]), int(point_coordinates_list[1])
                 )
+            points.update_draw()
 
     except FileNotFoundError:
         print(f"Error: File {file_path} not found.")
@@ -36,25 +36,36 @@ def read_pointlist_from_file(file_path: str) -> str | None:
         return "An unexpected error occurred"
 
 
-def min_max_triangle(points: list[Point]) -> tuple[Triangle, Triangle]:
-    progressbar_max_width: float = progressbar.get_width()
-    progressbar_text.set_text("")
-
+def triangles_area_map(points: list[Point]):
     triangles_area_map: dict[Triangle, float] = {}
 
+    n: int = len(points)
+    predicted_triangles_count: int = n * (n - 1) * (n - 2)
+
+    progress_text.set_text("0%")
+    setted_progress: float = 0.0
     for count, combo in enumerate(permutations(points, 3), 1):
         current_triangle: Triangle = Triangle(f"temp-{uuid.uuid4()}", *combo)
         area: float = current_triangle.area
+
+        progress: float = round(count / predicted_triangles_count * 100, 1)
+        if progress > setted_progress:
+            progress_text.set_text(f"{progress:.1f}%")
+            setted_progress = progress
         if current_triangle.valid:
             triangles_area_map[current_triangle] = area
-            if count % (len(points) // 100):
-                progressbar.set_width(count / len(points) * progressbar_max_width)
-                progressbar_text.set_text(f"{(count / len(points) * 100):.1f}")
         else:
             print(
-                f"not valid: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}"
+                f"not valid Triangle: {current_triangle.point1.number}, {current_triangle.point2.number}, {current_triangle.point3.number}"
             )
-    return min(set(triangles_area_map), key=triangles_area_map.get), max(set(triangles_area_map), key=triangles_area_map.get)  # type: ignore
+    progress_text.set_text("")
+    return triangles_area_map
+
+
+def min_max_triangle(
+    triangles_area: dict[Triangle, float]
+) -> tuple[Triangle, Triangle]:
+    return min(set(triangles_area), key=triangles_area.get), max(set(triangles_area), key=triangles_area.get)  # type: ignore
 
 
 def on_pointlistpath_submit(event) -> None:
@@ -72,72 +83,84 @@ def on_pointlistpath_submit(event) -> None:
 
 
 def on_findbutton_clicked(event) -> None:
-    global min_max_triangle_flag
-    if not min_max_triangle_flag:
+    global min_triangle, max_triangle
+    with thread_creation_lock:
+        if threading.active_count() > 1:
+            return
+
+        process = threading.Thread(
+            target=calculating_triangles_process, args=(points.list,)
+        )
         triangles.list = []
         triangles.update_draw()
-        min_max_triangle_flag = True
-        min_triangle, max_triangle = min_max_triangle(points.list)
-        min_max_triangle_flag = False
-        triangles.add_triangle_with_points(
-            "min", min_triangle.point1, min_triangle.point2, min_triangle.point3
-        )
-        triangles.add_triangle_with_points(
-            "max", max_triangle.point1, max_triangle.point2, max_triangle.point3
-        )
-        print(f"min area: {min_triangle.area}, max area: {max_triangle.area}")
+        process.start()
+        while process.is_alive():
+            figure.canvas.draw()
+            plt.pause(0.1)
+        process.join(timeout=120)
+        if process.is_alive():
+            print("Process timeout, try again")
+        else:
+            triangles.add_triangle_with_points(
+                "min", min_triangle.point1, min_triangle.point2, min_triangle.point3  # type: ignore
+            )
+            triangles.add_triangle_with_points(
+                "max", max_triangle.point1, max_triangle.point2, max_triangle.point3  # type: ignore
+            )
+            print(f"min area: {min_triangle.area}, max area: {max_triangle.area}")  # type: ignore
 
 
-if __name__ == "__main__":
-    # print(plt.style.available)
-    plt.style.use("seaborn-v0_8-darkgrid")
-    # print(matplotlib.rcParams.keys())
-    plt.rcParams["figure.figsize"] = (7, 7)
+def calculating_triangles_process(points):
+    global min_triangle, max_triangle
+    try:
+        triangles_area: dict[Triangle, float] = triangles_area_map(points)
+        min_triangle, max_triangle = min_max_triangle(triangles_area)
+    except Exception as e:
+        print(f"Error in calculating_process: {e}")
 
-    figure, axes = plt.subplots()
-    axes.set_title("Coordinate plane")
-    axes.set_xlabel("X-axis")
-    axes.set_ylabel("Y-axis")
-    find_button = Button(
-        plt.axes((0.6, 0.95, 0.3, 0.05)),
-        "Find min/max Triangles",
-        color=mcolors.CSS4_COLORS["lightgreen"],
-        hovercolor=mcolors.CSS4_COLORS["palegreen"],
-    )
-    find_button.on_clicked(on_findbutton_clicked)
-    pointlist_input = TextBox(
-        plt.axes((0.15, 0.95, 0.3, 0.05)),
-        "Path:",
-        "./2_1/data/plist.txt",
-        hovercolor=mcolors.CSS4_COLORS["whitesmoke"],
-    )
-    pointlist_input.on_submit(on_pointlistpath_submit)
-    inputresponse_text = text(0, -0.5, "")
-    progressbar_text = text(0.75, 0.9, "")
-    progressbar_bg = Rectangle(
-        (0.6, 0.9), 0.3, 0.025, color=mcolors.CSS4_COLORS["honeydew"]
-    )
-    progressbar = Rectangle(
-        (0.6, 0.9), 0.3, 0.025, color=mcolors.CSS4_COLORS["greenyellow"]
-    )
-    axes.add_patch(progressbar_bg)
-    axes.add_patch(progressbar)
 
-    points = PointsDraw(axes, mcolors.CSS4_COLORS["slategray"], scale=6)
-    triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], points_scale=3)
+# print(plt.style.available)
+plt.style.use("seaborn-v0_8-darkgrid")
+# print(matplotlib.rcParams.keys())
+plt.rcParams["figure.figsize"] = (7, 7)
 
-    pointlist_input_buffer: str = pointlist_input.text
-    exception: str | None = read_pointlist_from_file(pointlist_input.text)
-    if exception:
-        inputresponse_text.set_color("r")
-        inputresponse_text.set_text(exception)
-        pointlist_input.set_val(pointlist_input_buffer)
-    else:
-        inputresponse_text.set_color("g")
-        inputresponse_text.set_text("Done")
+figure, axes = plt.subplots()
+axes.set_title("Coordinate plane")
+axes.set_xlabel("X-axis")
+axes.set_ylabel("Y-axis")
+progress_text = figure.text(0.99, 0.965, "", horizontalalignment="right")
+find_button = Button(
+    plt.axes((0.6, 0.95, 0.3, 0.05)),
+    "Find min/max Triangles",
+    color=mcolors.CSS4_COLORS["lightgreen"],
+    hovercolor=mcolors.CSS4_COLORS["palegreen"],
+)
+find_button.on_clicked(on_findbutton_clicked)
+pointlist_input = TextBox(
+    plt.axes((0.15, 0.95, 0.3, 0.05)),
+    "Path:",
+    "./2_1/data/plist.txt",
+    hovercolor=mcolors.CSS4_COLORS["whitesmoke"],
+)
+pointlist_input.on_submit(on_pointlistpath_submit)
+inputresponse_text = text(0, -0.5, "")
 
-    points.adjust_axis_limits()
+points = PointsDraw(axes, mcolors.CSS4_COLORS["slategray"], scale=6)
+triangles = TrianglesDraw(axes, mcolors.CSS4_COLORS["orange"], points_scale=3)
 
-    min_max_triangle_flag = False
+pointlist_input_buffer: str = pointlist_input.text
+exception: str | None = read_pointlist_from_file(pointlist_input.text)
+if exception:
+    inputresponse_text.set_color("r")
+    inputresponse_text.set_text(exception)
+    pointlist_input.set_val(pointlist_input_buffer)
+else:
+    inputresponse_text.set_color("g")
+    inputresponse_text.set_text("Done")
 
-    plt.show()
+points.adjust_axis_limits()
+
+min_triangle, max_triangle = None, None
+thread_creation_lock = threading.Lock()
+
+plt.show()
